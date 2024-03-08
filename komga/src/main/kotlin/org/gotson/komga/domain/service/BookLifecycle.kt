@@ -296,12 +296,11 @@ class BookLifecycle(
     val media = mediaRepository.findById(book.id)
     val pageContent = bookAnalyzer.getPageContent(BookWithMedia(book, media), number)
     val pageMediaType =
-      if (media.profile == MediaProfile.PDF)
-        pdfImageType.mediaType
-      else if (media.profile == MediaProfile.MOBI)
-      pdfImageType.mediaType
-      else
-        media.pages[number - 1].mediaType
+      when (media.profile) {
+          MediaProfile.PDF -> pdfImageType.mediaType
+          MediaProfile.MOBI -> pdfImageType.mediaType
+          else -> media.pages[number - 1].mediaType
+      }
 
     if (resizeTo != null) {
       val convertedPage =
