@@ -34,7 +34,7 @@ class MobiExtractor(
     }.filter { imageIO -> Objects.nonNull(imageIO) }
       .map { imageIO ->
         val dimension = if (analyzeDimensions) Dimension(imageIO.width, imageIO.height) else null
-        MediaContainerEntry(name = "${index.incrementAndGet() + 1}", dimension = dimension)
+        MediaContainerEntry(name = "${index.incrementAndGet()}", dimension = dimension)
       }
   }
 
