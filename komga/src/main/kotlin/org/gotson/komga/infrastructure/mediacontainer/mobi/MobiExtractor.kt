@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import java.io.ByteArrayInputStream
 import java.nio.file.Path
+import java.util.Objects
 import java.util.concurrent.atomic.AtomicInteger
 import javax.imageio.ImageIO
 import kotlin.math.roundToInt
@@ -29,10 +30,12 @@ class MobiExtractor(
     val reader = MobiReader().read(path.toFile())
     val index = AtomicInteger(0)
     return reader.images.map { image ->
-      val imageIO = ImageIO.read(ByteArrayInputStream(image))
-      val dimension = if (analyzeDimensions) Dimension(imageIO.width, imageIO.height) else null
-      MediaContainerEntry(name = "${index.incrementAndGet() + 1}", dimension = dimension)
-    }
+      ImageIO.read(ByteArrayInputStream(image))
+    }.filter { imageIO -> Objects.nonNull(imageIO) }
+      .map { imageIO ->
+        val dimension = if (analyzeDimensions) Dimension(imageIO.width, imageIO.height) else null
+        MediaContainerEntry(name = "${index.incrementAndGet() + 1}", dimension = dimension)
+      }
   }
 
   fun getPageContentAsImage(
