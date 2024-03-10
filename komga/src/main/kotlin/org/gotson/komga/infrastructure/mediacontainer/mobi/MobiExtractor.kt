@@ -30,10 +30,14 @@ class MobiExtractor(
     val reader = MobiReader().read(path.toFile())
     val index = AtomicInteger(0)
     return reader.images.map { image ->
-      ImageIO.read(ByteArrayInputStream(image))
+      try {
+        ImageIO.read(ByteArrayInputStream(image))
+      } catch (e: Exception) {
+        null
+      }
     }.filter { imageIO -> Objects.nonNull(imageIO) }
       .map { imageIO ->
-        val dimension = if (analyzeDimensions) Dimension(imageIO.width, imageIO.height) else null
+        val dimension = if (analyzeDimensions) Dimension(imageIO!!.width, imageIO.height) else null
         MediaContainerEntry(name = "${index.incrementAndGet()}", dimension = dimension)
       }
   }
