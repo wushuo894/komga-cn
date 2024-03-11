@@ -40,7 +40,8 @@ jobs:
         working-directory: komga-webui
         run: |
           npm run build
-          ls
+          mkdir ../komga/src/main/resources/public
+          cp -r dist/* ../komga/src/main/resources/public/
         env:
           NODE_OPTIONS: "--max-old-space-size=4096"
 
