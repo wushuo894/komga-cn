@@ -95,12 +95,12 @@ class EpubExtractor(
 
     // 先判断有没有 cover
     val zip = ZipFile(path.toFile())
-    val opfFile = zip.getPackagePath()
-    val opfDir = Paths.get(opfFile).parent
     val entries = zip.entries.toList()
-      .filter { it.name.endsWith(".png") || it.name.endsWith(".jpg") }
+      .filter { item ->
+        listOf(".jpg", ".png", ".jpeg").any { item.name.endsWith(it) }
+      }
     for (entry in entries) {
-      for (s in listOf("cover.jpg", "cover.png")) {
+      for (s in listOf("cover.jpg", "cover.png", "cover.jpeg")) {
         if (entry.name.endsWith(s)) {
           return TypedBytes(
             zip.getInputStream(entry).readAllBytes(),
