@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.net.URLDecoder
 import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.Objects
 import kotlin.io.path.Path
 import kotlin.io.path.invariantSeparatorsPathString
@@ -60,44 +61,60 @@ class EpubExtractor(
    * Retrieves the book cover along with its mediaType from the epub 2/3 manifest
    */
   fun getCover(path: Path): TypedBytes? {
-    return path.epub { (zip, opfDoc, opfDir, manifest) ->
-      val coverManifestItem =
-        // EPUB 3 - try to get cover from manifest properties 'cover-image'
-        manifest.values.firstOrNull { it.properties.contains("cover-image") || it.id == "cover.xhtml" }
-          ?: // EPUB 2 - get cover from meta element with name="cover"
-          opfDoc.selectFirst("metadata > meta[name=cover]")?.attr("content")?.ifBlank { null }?.let { manifest[it] }
+    val bytes = path.epub { (zip, opfDoc, opfDir, manifest) ->
+      try {
+        val coverManifestItem =
+          // EPUB 3 - try to get cover from manifest properties 'cover-image'
+          manifest.values.firstOrNull { it.properties.contains("cover-image") || it.id == "cover.xhtml" }
+            ?: // EPUB 2 - get cover from meta element with name="cover"
+            opfDoc.selectFirst("metadata > meta[name=cover]")?.attr("content")?.ifBlank { null }?.let { manifest[it] }
+        var href = coverManifestItem!!.href
+        var mediaType = coverManifestItem.mediaType
 
-      if (Objects.isNull(coverManifestItem)) {
-        for (entry in zip.entries) {
-          for (s in listOf("images/cover.jpg", "images/cover.png")) {
-            if (entry.name == normalizeHref(opfDir, s)) {
-              return TypedBytes(
-                zip.getInputStream(entry).readAllBytes(),
-                "image/",
-              )
-            }
-          }
+        if (coverManifestItem.id == "cover.xhtml") {
+          val cover = zip.getInputStream(zip.getEntry(normalizeHref(opfDir, href)))
+            .use { Jsoup.parse(it, null, "") }
+          val img = cover.getElementsByTag("img").ifEmpty { cover.getElementsByTag("image") }
+          href = img.attr("src").ifEmpty { img.attr("xlink:href") }
+          href = normalizeHref(opfDir, href)
+          mediaType = "image/"
         }
-        return null
+        val coverPath = URLDecoder.decode(normalizeHref(opfDir, href), "UTF-8")
+        TypedBytes(
+          zip.getInputStream(zip.getEntry(coverPath)).readAllBytes(),
+          mediaType,
+        )
+      } catch (e: Exception) {
+        null
       }
-
-      var href = coverManifestItem!!.href
-      var mediaType = coverManifestItem.mediaType
-
-      if (coverManifestItem.id == "cover.xhtml") {
-        val cover = zip.getInputStream(zip.getEntry(normalizeHref(opfDir, href)))
-          .use { Jsoup.parse(it, null, "") }
-        val img = cover.getElementsByTag("img").ifEmpty { cover.getElementsByTag("image") }
-        href = img.attr("src").ifEmpty { img.attr("xlink:href") }
-        href = normalizeHref(opfDir, href)
-        mediaType = "image/"
-      }
-      val coverPath = URLDecoder.decode(normalizeHref(opfDir, href), "UTF-8")
-      TypedBytes(
-        zip.getInputStream(zip.getEntry(coverPath)).readAllBytes(),
-        mediaType,
-      )
     }
+
+    if (Objects.nonNull(bytes)) {
+      return bytes
+    }
+
+    // 先判断有没有 cover
+    val zip = ZipFile(path.toFile())
+    val opfFile = zip.getPackagePath()
+    val opfDir = Paths.get(opfFile).parent
+    val entries = zip.entries.toList()
+      .filter { it.name.endsWith(".png") || it.name.endsWith(".jpg") }
+    for (entry in entries) {
+      for (s in listOf("cover.jpg", "cover.png")) {
+        if (entry.name.endsWith(s)) {
+          return TypedBytes(
+            zip.getInputStream(entry).readAllBytes(),
+            "image/",
+          )
+        }
+      }
+    }
+
+    // 没有找到 cover 直接使用第一个图片
+    return TypedBytes(
+      zip.getInputStream(entries.firstOrNull()).readAllBytes(),
+      "image/",
+    )
   }
 
   fun getManifest(
