@@ -67,6 +67,9 @@ class LuceneHelper(
   ): List<String>? {
     return if (!searchTerm.isNullOrBlank()) {
       try {
+        if (searchTerm.matches(Regex("^\\^\\w$"))) {
+          entity.defaultFields.plus("namePinyin")
+        }
         val fieldsQuery =
           MultiFieldQueryParser(entity.defaultFields, searchAnalyzer).apply {
             defaultOperator = QueryParser.Operator.AND

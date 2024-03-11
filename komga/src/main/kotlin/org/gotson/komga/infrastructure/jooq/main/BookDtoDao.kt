@@ -483,6 +483,7 @@ class BookDtoDao(
       seriesTitle = seriesTitle,
       libraryId = libraryId,
       name = name,
+      namePinyin= "",
       url = URL(url).toFilePath(),
       number = number,
       created = createdDate,

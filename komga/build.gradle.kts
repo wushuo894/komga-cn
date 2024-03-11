@@ -83,6 +83,7 @@ dependencies {
     implementation("org.apache.lucene:lucene-analysis-common:$luceneVersion")
     implementation("org.apache.lucene:lucene-queryparser:$luceneVersion")
     implementation("org.apache.lucene:lucene-backward-codecs:$luceneVersion")
+    implementation("io.github.biezhi:TinyPinyin:2.0.3.RELEASE")
   }
 
   implementation("com.ibm.icu:icu4j:74.2")

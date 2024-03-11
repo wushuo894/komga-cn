@@ -1,5 +1,6 @@
 package org.gotson.komga.domain.service
 
+import com.github.promeg.pinyinhelper.Pinyin
 import io.github.oshai.kotlinlogging.KotlinLogging
 import net.greypanther.natsort.CaseInsensitiveSimpleNaturalComparator
 import org.gotson.komga.application.tasks.TaskEmitter
@@ -151,11 +152,11 @@ class SeriesLifecycle(
   fun createSeries(series: Series): Series {
     transactionTemplate.executeWithoutResult {
       seriesRepository.insert(series)
-
+      var titleSort = if (series.name.matches(Regex("^\\w"))) series.name else Pinyin.toPinyin(series.name, "UTF-8")
       seriesMetadataRepository.insert(
         SeriesMetadata(
           title = series.name,
-          titleSort = series.name.stripAccents(),
+          titleSort = titleSort.stripAccents(),
           seriesId = series.id,
         ),
       )
@@ -366,6 +367,7 @@ class SeriesLifecycle(
         logger.info { "More than one thumbnail is selected, removing extra ones" }
         thumbnailsSeriesRepository.markSelected(selected[0])
       }
+
       selected.isEmpty() && all.isNotEmpty() -> {
         logger.info { "Series has no selected thumbnail, choosing one automatically" }
         thumbnailsSeriesRepository.markSelected(all.first())

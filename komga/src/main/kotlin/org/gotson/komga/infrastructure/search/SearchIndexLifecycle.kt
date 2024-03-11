@@ -1,5 +1,6 @@
 package org.gotson.komga.infrastructure.search
 
+import com.github.promeg.pinyinhelper.Pinyin
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.apache.lucene.document.Document
 import org.apache.lucene.index.Term
@@ -39,13 +40,14 @@ class SearchIndexLifecycle(
   }
 
   fun rebuildIndex(entities: Set<LuceneEntity>? = null) {
-    val targetEntities = entities ?: LuceneEntity.values().toSet()
+    val targetEntities = entities ?: LuceneEntity.entries.toSet()
 
     logger.info { "Rebuild index for: ${targetEntities.map { it.type }}" }
-
-    targetEntities.forEach {
+    targetEntities.forEach { it ->
       when (it) {
-        LuceneEntity.Book -> rebuildIndex(it, { p: Pageable -> bookDtoRepository.findAll(BookSearchWithReadProgress(), "unused", p) }, { e: BookDto -> e.bookToDocument() })
+        LuceneEntity.Book -> rebuildIndex(it, { p: Pageable -> bookDtoRepository.findAll(BookSearchWithReadProgress(), "unused", p).map { it.also {
+          it.namePinyin = Pinyin.toPinyin(it.name,"")
+        } } }, { e: BookDto -> e.bookToDocument() })
         LuceneEntity.Series -> rebuildIndex(it, { p: Pageable -> seriesDtoRepository.findAll(SeriesSearchWithReadProgress(), "unused", p) }, { e: SeriesDto -> e.toDocument() })
         LuceneEntity.Collection -> rebuildIndex(it, { p: Pageable -> collectionRepository.findAll(pageable = p) }, { e: SeriesCollection -> e.toDocument() })
         LuceneEntity.ReadList -> rebuildIndex(it, { p: Pageable -> readListRepository.findAll(pageable = p) }, { e: ReadList -> e.toDocument() })
