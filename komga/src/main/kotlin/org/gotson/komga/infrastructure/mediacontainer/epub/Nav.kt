@@ -4,13 +4,19 @@ import org.gotson.komga.domain.model.EpubTocEntry
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.springframework.web.util.UriUtils
+import java.net.URLDecoder
 import java.nio.file.Path
+import java.util.Objects
 import kotlin.io.path.Path
 
 fun EpubPackage.getNavResource(): ResourceContent? =
   manifest.values.firstOrNull { it.properties.contains("nav") }?.let { nav ->
     val href = normalizeHref(opfDir, nav.href)
-    zip.getInputStream(zip.getEntry(href)).use { ResourceContent(Path(href), it.readBytes().decodeToString()) }
+    var inputStream = zip.getInputStream(zip.getEntry(href))
+    if (Objects.isNull(inputStream)) {
+      inputStream = zip.getInputStream(zip.getEntry(URLDecoder.decode(href, "UTF-8")))
+    }
+    inputStream.use { ResourceContent(Path(href), it.readBytes().decodeToString()) }
   }
 
 fun processNav(

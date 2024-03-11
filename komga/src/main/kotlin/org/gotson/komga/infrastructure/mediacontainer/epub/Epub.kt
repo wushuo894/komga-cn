@@ -5,8 +5,10 @@ import org.gotson.komga.domain.model.MediaUnsupportedException
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.parser.Parser
+import java.net.URLDecoder
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.Objects
 
 data class EpubPackage(
   val zip: ZipFile,
@@ -18,7 +20,11 @@ data class EpubPackage(
 inline fun <R> Path.epub(block: (EpubPackage) -> R): R =
   ZipFile(this.toFile()).use { zip ->
     val opfFile = zip.getPackagePath()
-    val opfDoc = zip.getInputStream(zip.getEntry(opfFile)).use { Jsoup.parse(it, null, "", Parser.xmlParser()) }
+    var inputStream = zip.getInputStream(zip.getEntry(opfFile))
+    if (Objects.isNull(inputStream)) {
+      inputStream = zip.getInputStream(zip.getEntry(URLDecoder.decode(opfFile,"UTF-8")))
+    }
+    val opfDoc = inputStream.use { Jsoup.parse(it, null, "", Parser.xmlParser()) }
     val opfDir = Paths.get(opfFile).parent
     block(EpubPackage(zip, opfDoc, opfDir, opfDoc.getManifest()))
   }
@@ -32,7 +38,11 @@ fun ZipFile.getPackagePath(): String =
 fun getPackageFile(path: Path): String? =
   ZipFile(path.toFile()).use { zip ->
     try {
-      zip.getInputStream(zip.getEntry(zip.getPackagePath())).reader().use { it.readText() }
+      var inputStream = zip.getInputStream(zip.getEntry(zip.getPackagePath()))
+      if (Objects.isNull(inputStream)) {
+        inputStream = zip.getInputStream(zip.getEntry(URLDecoder.decode(zip.getPackagePath(),"UTF-8")))
+      }
+      inputStream.reader().use { it.readText() }
     } catch (e: Exception) {
       null
     }

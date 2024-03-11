@@ -14,7 +14,10 @@ import org.gotson.komga.infrastructure.mediacontainer.ContentDetector
 import org.jsoup.Jsoup
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.io.InputStream
+import java.net.URLDecoder
 import java.nio.file.Path
+import java.util.Objects
 import kotlin.io.path.Path
 import kotlin.io.path.invariantSeparatorsPathString
 import kotlin.math.ceil
@@ -36,12 +39,24 @@ class EpubExtractor(
     entryName: String,
   ): ByteArray =
     ZipFile(path.toFile()).use { zip ->
-      zip.getEntry(entryName)?.let { entry -> zip.getInputStream(entry).use { it.readBytes() } }
-        ?: throw EntryNotFoundException("Entry does not exist: $entryName")
+      val bytes: ByteArray?
+      try {
+        var entry = zip.getEntry(entryName)
+        var inputStream = zip.getInputStream(entry)
+        if (Objects.isNull(inputStream)) {
+          entry = zip.getEntry(URLDecoder.decode(entryName, "UTF-8"))
+          inputStream = zip.getInputStream(entry)
+        }
+        bytes = inputStream.use { it.readAllBytes() }
+      } catch (e: Exception) {
+        throw EntryNotFoundException("Entry does not exist: $entryName")
+      }
+      bytes
     }
 
   fun isEpub(path: Path): Boolean =
     true
+
 
   /**
    * Retrieves the book cover along with its mediaType from the epub 2/3 manifest
@@ -50,7 +65,7 @@ class EpubExtractor(
     path.epub { (zip, opfDoc, opfDir, manifest) ->
       val coverManifestItem =
         // EPUB 3 - try to get cover from manifest properties 'cover-image'
-        manifest.values.firstOrNull { it.properties.contains("cover-image") }
+        manifest.values.firstOrNull { it.properties.contains("cover-image") || it.id == "cover.xhtml" }
           ?: // EPUB 2 - get cover from meta element with name="cover"
           opfDoc.selectFirst("metadata > meta[name=cover]")?.attr("content")?.ifBlank { null }?.let { manifest[it] }
 
@@ -129,7 +144,12 @@ class EpubExtractor(
           .map { it.attr("idref") }
           .mapNotNull { idref -> epub.manifest[idref]?.href?.let { normalizeHref(epub.opfDir, it) } }
           .map { pagePath ->
-            val doc = epub.zip.getInputStream(epub.zip.getEntry(pagePath)).use { Jsoup.parse(it, null, "") }
+            var inputStream = epub.zip.getInputStream(epub.zip.getEntry(pagePath))
+            if (Objects.isNull(inputStream)) {
+              inputStream = epub.zip.getInputStream(epub.zip.getEntry(URLDecoder.decode(pagePath, "UTF-8")))
+            }
+
+            val doc = inputStream.use { Jsoup.parse(it, null, "") }
 
             // if a page has text over the threshold then the book is not divina compatible
             if (doc.body().text().length > letterCountThreshold) return emptyList()
@@ -152,13 +172,18 @@ class EpubExtractor(
       val divinaPages =
         imagesPath.mapNotNull { imagePath ->
           val mediaType = epub.manifest.values.firstOrNull { normalizeHref(epub.opfDir, it.href) == imagePath }?.mediaType ?: return@mapNotNull null
-          val zipEntry = epub.zip.getEntry(imagePath)
+          var zipEntry = epub.zip.getEntry(imagePath)
           if (!contentDetector.isImage(mediaType)) return@mapNotNull null
 
           val dimension =
-            if (analyzeDimensions)
-              epub.zip.getInputStream(zipEntry).use { imageAnalyzer.getDimension(it) }
-            else
+            if (analyzeDimensions) {
+              var inputStream = epub.zip.getInputStream(zipEntry)
+              if (Objects.isNull(inputStream)) {
+                zipEntry = epub.zip.getEntry(URLDecoder.decode(imagePath, "UTF-8"))
+                inputStream = epub.zip.getInputStream(zipEntry)
+              }
+              inputStream.use { imageAnalyzer.getDimension(it) }
+            } else
               null
           val fileSize = if (zipEntry.size == ArchiveEntry.SIZE_UNKNOWN) null else zipEntry.size
           BookPage(fileName = imagePath, mediaType = mediaType, dimension = dimension, fileSize = fileSize)

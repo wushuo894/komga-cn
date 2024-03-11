@@ -9,7 +9,9 @@ import org.gotson.komga.domain.model.MediaType
 import org.gotson.komga.infrastructure.image.ImageAnalyzer
 import org.gotson.komga.infrastructure.mediacontainer.ContentDetector
 import org.springframework.stereotype.Service
+import java.net.URLDecoder
 import java.nio.file.Path
+import java.util.Objects
 
 private val logger = KotlinLogging.logger {}
 
@@ -54,6 +56,10 @@ class ZipExtractor(
     entryName: String,
   ): ByteArray =
     ZipFile(path.toFile()).use { zip ->
-      zip.getInputStream(zip.getEntry(entryName)).use { it.readBytes() }
+      var inputStream = zip.getInputStream(zip.getEntry(entryName))
+      if (Objects.isNull(inputStream)) {
+        inputStream = zip.getInputStream(zip.getEntry(URLDecoder.decode(entryName,"UTF-8")))
+      }
+      inputStream.use { it.readBytes() }
     }
 }

@@ -4,7 +4,9 @@ import org.gotson.komga.domain.model.EpubTocEntry
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.springframework.web.util.UriUtils
+import java.net.URLDecoder
 import java.nio.file.Path
+import java.util.Objects
 import kotlin.io.path.Path
 
 private val possibleNcxItemIds = listOf("toc", "ncx", "ncxtoc")
@@ -12,7 +14,11 @@ private val possibleNcxItemIds = listOf("toc", "ncx", "ncxtoc")
 fun EpubPackage.getNcxResource(): ResourceContent? =
   (manifest.values.firstOrNull { it.mediaType == "application/x-dtbncx+xml" } ?: manifest.values.firstOrNull { possibleNcxItemIds.contains(it.id) })?.let { ncx ->
     val href = normalizeHref(opfDir, ncx.href)
-    zip.getInputStream(zip.getEntry(href)).use { ResourceContent(Path(href), it.readBytes().decodeToString()) }
+    var inputStream = zip.getInputStream(zip.getEntry(href))
+    if (Objects.isNull(inputStream)) {
+      inputStream = zip.getInputStream(zip.getEntry(URLDecoder.decode(href,"UTF-8")))
+    }
+    inputStream.use { ResourceContent(Path(href), it.readBytes().decodeToString()) }
   }
 
 fun processNcx(
