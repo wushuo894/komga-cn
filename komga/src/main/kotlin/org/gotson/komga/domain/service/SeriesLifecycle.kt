@@ -152,7 +152,7 @@ class SeriesLifecycle(
   fun createSeries(series: Series): Series {
     transactionTemplate.executeWithoutResult {
       seriesRepository.insert(series)
-      var titleSort = if (series.name.matches(Regex("^\\w"))) series.name else Pinyin.toPinyin(series.name, "UTF-8")
+      val titleSort = if (series.name.matches(Regex("^\\w"))) series.name else Pinyin.toPinyin(series.name, "UTF-8")
       seriesMetadataRepository.insert(
         SeriesMetadata(
           title = series.name,
