@@ -34,6 +34,11 @@ jobs:
       - name: ls
         run: |
           ls komga/build
+      - name: Upload to Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Artifacts
+          path: komga/build/libs/*.jar
 
       - name: Upload Unit Test Results
         if: always()
