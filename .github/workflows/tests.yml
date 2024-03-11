@@ -30,7 +30,7 @@ jobs:
       - name: Build
         uses: gradle/actions/setup-gradle@v3
         with:
-          arguments: build :komga-tray:jar
+          arguments: bootjar :komga-tray:jar
 
       - name: Upload Unit Test Results
         if: always()
