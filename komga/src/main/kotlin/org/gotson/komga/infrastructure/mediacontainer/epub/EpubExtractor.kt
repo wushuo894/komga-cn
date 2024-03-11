@@ -54,8 +54,11 @@ class EpubExtractor(
     }
 
   fun isEpub(path: Path): Boolean =
-    true
-
+    try {
+      getEntryStream(path, "mimetype").decodeToString().startsWith("application/epub+zip")
+    } catch (e: Exception) {
+      false
+    }
 
   /**
    * Retrieves the book cover along with its mediaType from the epub 2/3 manifest
