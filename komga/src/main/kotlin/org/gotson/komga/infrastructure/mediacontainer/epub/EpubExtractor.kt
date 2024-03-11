@@ -14,7 +14,6 @@ import org.gotson.komga.infrastructure.mediacontainer.ContentDetector
 import org.jsoup.Jsoup
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.io.InputStream
 import java.net.URLDecoder
 import java.nio.file.Path
 import java.util.Objects
@@ -126,7 +125,14 @@ class EpubExtractor(
 
     val zipEntries = epub.zip.entries.toList()
     return (pages + assets).map { resource ->
-      resource.copy(fileSize = zipEntries.firstOrNull { it.name == resource.fileName }?.let { if (it.size == ArchiveEntry.SIZE_UNKNOWN) null else it.size })
+      resource.copy(
+          fileSize =
+          zipEntries.firstOrNull {
+              listOf(resource.fileName, URLDecoder.decode(resource.fileName, "UTF-8"))
+                  .contains(resource.fileName)
+          }
+              ?.let { if (it.size == ArchiveEntry.SIZE_UNKNOWN) null else it.size },
+      )
     }
   }
 
