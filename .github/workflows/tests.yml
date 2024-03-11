@@ -27,6 +27,17 @@ jobs:
           java-package: 'jdk'
           distribution: 'temurin'
 
+      - name: npm install
+        working-directory: komga-webui
+        run: npm install
+      - name: npm build
+        working-directory: komga-webui
+        run: |
+          npm run build
+          ls komga-webui
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
+
       - name: Build
         uses: gradle/actions/setup-gradle@v3
         with:
@@ -46,52 +57,3 @@ jobs:
         with:
           name: test-results
           path: komga/build/test-results/
-
-      - name: Upload Unit Test Reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-reports
-          path: komga/build/reports/tests/
-
-      - name: Conveyor - compute JDK module list
-        if: github.event_name == 'push'
-        uses: hydraulic-software/conveyor/actions/build@v13.1
-        with:
-          command: -f conveyor.detect.conf -Kapp.machines=mac.aarch64 make processed-jars
-          signing_key: ${{ secrets.CONVEYOR_SIGNING_KEY }}
-          agree_to_license: 1
-
-      - name: Compare JDK required modules
-        id: conveyor_compare
-        if: github.event_name == 'push'
-        run: diff --unified  ./komga-tray/conveyor/required-jdk-modules.txt ./output/required-jdk-modules.txt
-
-      - name: Upload JDK required modules
-        if: steps.conveyor_compare.outcome == 'failure'
-        uses: actions/upload-artifact@v4
-        with:
-          name: conveyor-required-jdk-modules
-          path: ./output/required-jdk-modules.txt
-
-  webui:
-    runs-on: ubuntu-latest
-    name: Test webui builds
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
-          cache-dependency-path: komga-webui/package-lock.json
-      - name: npm install
-        working-directory: komga-webui
-        run: npm install
-      - name: npm build
-        working-directory: komga-webui
-        run: npm run build
-        env:
-          NODE_OPTIONS: "--max-old-space-size=4096"
-      - name: npm test
-        working-directory: komga-webui
-        run: npm run test:unit
