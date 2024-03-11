@@ -18,6 +18,9 @@ fun EpubPackage.getNcxResource(): ResourceContent? =
     if (Objects.isNull(inputStream)) {
       inputStream = zip.getInputStream(zip.getEntry(URLDecoder.decode(href,"UTF-8")))
     }
+    if (Objects.isNull(inputStream)) {
+      return null
+    }
     inputStream.use { ResourceContent(Path(href), it.readBytes().decodeToString()) }
   }
 

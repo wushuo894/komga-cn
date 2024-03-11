@@ -54,17 +54,13 @@ class EpubExtractor(
     }
 
   fun isEpub(path: Path): Boolean =
-    try {
-      getEntryStream(path, "mimetype").decodeToString().startsWith("application/epub+zip")
-    } catch (e: Exception) {
-      false
-    }
+    true
 
   /**
    * Retrieves the book cover along with its mediaType from the epub 2/3 manifest
    */
-  fun getCover(path: Path): TypedBytes? =
-    path.epub { (zip, opfDoc, opfDir, manifest) ->
+  fun getCover(path: Path): TypedBytes? {
+    return path.epub { (zip, opfDoc, opfDir, manifest) ->
       val coverManifestItem =
         // EPUB 3 - try to get cover from manifest properties 'cover-image'
         manifest.values.firstOrNull { it.properties.contains("cover-image") || it.id == "cover.xhtml" }
@@ -72,25 +68,37 @@ class EpubExtractor(
           opfDoc.selectFirst("metadata > meta[name=cover]")?.attr("content")?.ifBlank { null }?.let { manifest[it] }
 
       if (Objects.isNull(coverManifestItem)) {
-        null
+        for (entry in zip.entries) {
+          for (s in listOf("images/cover.jpg", "images/cover.png")) {
+            if (entry.name == normalizeHref(opfDir, s)) {
+              return TypedBytes(
+                zip.getInputStream(entry).readAllBytes(),
+                "image/",
+              )
+            }
+          }
+        }
+        return null
       }
 
       var href = coverManifestItem!!.href
       var mediaType = coverManifestItem.mediaType
 
-      if (coverManifestItem.id == "cover.xhtml"){
+      if (coverManifestItem.id == "cover.xhtml") {
         val cover = zip.getInputStream(zip.getEntry(normalizeHref(opfDir, href)))
           .use { Jsoup.parse(it, null, "") }
-        href = cover.getElementsByTag("img").attr("src")
+        val img = cover.getElementsByTag("img").ifEmpty { cover.getElementsByTag("image") }
+        href = img.attr("src").ifEmpty { img.attr("xlink:href") }
         href = normalizeHref(opfDir, href)
         mediaType = "image/"
       }
-      val coverPath = URLDecoder.decode(normalizeHref(opfDir, href),"UTF-8")
+      val coverPath = URLDecoder.decode(normalizeHref(opfDir, href), "UTF-8")
       TypedBytes(
         zip.getInputStream(zip.getEntry(coverPath)).readAllBytes(),
         mediaType,
       )
     }
+  }
 
   fun getManifest(
     path: Path,
@@ -189,7 +197,7 @@ class EpubExtractor(
       val divinaPages =
         imagesPath.mapNotNull { imagePath ->
           val mediaType = epub.manifest.values.firstOrNull { normalizeHref(epub.opfDir, it.href) == imagePath }?.mediaType ?: return@mapNotNull null
-          var zipEntry = epub.zip.getEntry(URLDecoder.decode(imagePath,"UTF-8"))
+          var zipEntry = epub.zip.getEntry(URLDecoder.decode(imagePath, "UTF-8"))
           if (!contentDetector.isImage(mediaType)) return@mapNotNull null
 
           val dimension =
@@ -203,7 +211,7 @@ class EpubExtractor(
             } else
               null
           val fileSize = if (zipEntry.size == ArchiveEntry.SIZE_UNKNOWN) null else zipEntry.size
-          BookPage(fileName = URLDecoder.decode(imagePath,"UTF-8"), mediaType = mediaType, dimension = dimension, fileSize = fileSize)
+          BookPage(fileName = URLDecoder.decode(imagePath, "UTF-8"), mediaType = mediaType, dimension = dimension, fileSize = fileSize)
         }
 
       if (divinaPages.size != pageCount) return emptyList()
