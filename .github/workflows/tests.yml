@@ -15,12 +15,6 @@ jobs:
     runs-on: ubuntu-latest
     name: Test server
     steps:
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
-          cache-dependency-path: komga-webui/package-lock.json
-
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
