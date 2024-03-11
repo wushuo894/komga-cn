@@ -110,11 +110,19 @@ class EpubExtractor(
       }
     }
 
-    // 没有找到 cover 直接使用第一个图片
-    return TypedBytes(
-      zip.getInputStream(entries.firstOrNull()).readAllBytes(),
-      "image/",
-    )
+    if (Objects.nonNull(entries.firstOrNull())) {
+      val inputStream = zip.getInputStream(entries.firstOrNull())
+      if (Objects.isNull(inputStream)) {
+        return null
+      }
+      // 没有找到 cover 直接使用第一个图片
+      return TypedBytes(
+        inputStream.readAllBytes(),
+        "image/",
+      )
+    }
+
+    return null
   }
 
   fun getManifest(
