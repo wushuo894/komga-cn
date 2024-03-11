@@ -38,8 +38,6 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
         with:
           arguments: :komga:bootJar
-        env:
-          NODE_OPTIONS: "--max-old-space-size=4096"
       - name: ls
         run: |
           ls komga/build
