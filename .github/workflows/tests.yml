@@ -40,10 +40,17 @@ jobs:
           arguments: :komga:bootJar
       - name: ls
         run: |
+          version=$(grep '^version=' gradle.properties | cut -d'=' -f2)
+          echo "version=v$version" >> $GITHUB_ENV
           ls komga/build
           cp -r komga/build/*
-      - name: Upload to Artifacts
-        uses: actions/upload-artifact@v4
+      - name: Release
+        uses: softprops/action-gh-release@v1
         with:
-          name: Artifacts
-          path: komga/build/libs/*.jar
+          name: ${{ env.version }}
+          body: ${{ env.version }}
+          tag_name: ${{ env.version }}
+          append_body: false
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: |
+            komga/build/libs/*.jar
