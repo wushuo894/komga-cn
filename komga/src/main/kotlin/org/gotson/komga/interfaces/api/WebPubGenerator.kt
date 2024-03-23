@@ -19,6 +19,7 @@ import org.gotson.komga.interfaces.api.dto.MEDIATYPE_WEBPUB_JSON_VALUE
 import org.gotson.komga.interfaces.api.dto.OpdsLinkRel
 import org.gotson.komga.interfaces.api.dto.PROFILE_DIVINA
 import org.gotson.komga.interfaces.api.dto.PROFILE_EPUB
+import org.gotson.komga.interfaces.api.dto.PROFILE_MOBI
 import org.gotson.komga.interfaces.api.dto.PROFILE_PDF
 import org.gotson.komga.interfaces.api.dto.WPBelongsToDto
 import org.gotson.komga.interfaces.api.dto.WPContributorDto
@@ -107,10 +108,10 @@ class WebPubGenerator(
     seriesMetadata: SeriesMetadata,
   ): WPPublicationDto {
     val uriBuilder = ServletUriComponentsBuilder.fromCurrentContextPath().pathSegment("api", "v1")
-    return bookDto.toBasePublicationDto().let {
+    return toBasePublicationDto(bookDto).let {
       it.copy(
         mediaType = MEDIATYPE_WEBPUB_JSON,
-        metadata = it.metadata.withSeriesMetadata(seriesMetadata).copy(conformsTo = PROFILE_PDF),
+        metadata = it.metadata.withSeriesMetadata(seriesMetadata).copy(conformsTo = PROFILE_MOBI),
         readingOrder =
         List(media.pageCount) { index: Int ->
           WPLinkDto(

@@ -70,6 +70,7 @@ class CommonBookController(
     mediaRepository.findByIdOrNull(bookId)?.let { media ->
       when (org.gotson.komga.domain.model.MediaType.fromMediaType(media.mediaType)?.profile) {
         MediaProfile.DIVINA -> getWebPubManifestDivinaInternal(principal, bookId, webPubGenerator)
+        MediaProfile.MOBI -> getWebPubManifestMobiInternal(principal, bookId, webPubGenerator)
         MediaProfile.PDF -> getWebPubManifestPdfInternal(principal, bookId, webPubGenerator)
         MediaProfile.EPUB -> getWebPubManifestEpubInternal(principal, bookId, webPubGenerator)
         null -> throw ResponseStatusException(HttpStatus.NOT_FOUND, "Book analysis failed")
@@ -100,6 +101,21 @@ class CommonBookController(
       if (bookDto.media.mediaProfile != MediaProfile.PDF.name) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Book media type '${bookDto.media.mediaType}' not compatible with requested profile")
       contentRestrictionChecker.checkContentRestriction(principal.user, bookDto)
       webPubGenerator.toManifestPdf(
+        bookDto,
+        mediaRepository.findById(bookDto.id),
+        seriesMetadataRepository.findById(bookDto.seriesId),
+      )
+    } ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
+
+  fun getWebPubManifestMobiInternal(
+    principal: KomgaPrincipal,
+    bookId: String,
+    webPubGenerator: WebPubGenerator,
+  ) =
+    bookDtoRepository.findByIdOrNull(bookId, principal.user.id)?.let { bookDto ->
+      if (bookDto.media.mediaProfile != MediaProfile.MOBI.name) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Book media type '${bookDto.media.mediaType}' not compatible with requested profile")
+      contentRestrictionChecker.checkContentRestriction(principal.user, bookDto)
+      webPubGenerator.toManifestMobi(
         bookDto,
         mediaRepository.findById(bookDto.id),
         seriesMetadataRepository.findById(bookDto.seriesId),

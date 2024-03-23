@@ -13,6 +13,7 @@ const val MEDIATYPE_PROGRESSION_JSON_VALUE = "application/vnd.readium.progressio
 const val PROFILE_DIVINA = "https://readium.org/webpub-manifest/profiles/divina"
 const val PROFILE_EPUB = "https://readium.org/webpub-manifest/profiles/epub"
 const val PROFILE_PDF = "https://readium.org/webpub-manifest/profiles/pdf"
+const val PROFILE_MOBI = "https://readium.org/webpub-manifest/profiles/mobi"
 
 val MEDIATYPE_OPDS_PUBLICATION_JSON = MediaType("application", "opds-publication+json")
 val MEDIATYPE_DIVINA_JSON = MediaType("application", "divina+json")
