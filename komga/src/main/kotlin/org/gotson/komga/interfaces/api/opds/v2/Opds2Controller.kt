@@ -1,10 +1,14 @@
 package org.gotson.komga.interfaces.api.opds.v2
 
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
 import org.gotson.komga.domain.model.BookSearchWithReadProgress
 import org.gotson.komga.domain.model.KomgaUser
 import org.gotson.komga.domain.model.Library
 import org.gotson.komga.domain.model.Media
+import org.gotson.komga.domain.model.ROLE_PAGE_STREAMING
 import org.gotson.komga.domain.model.ReadList
 import org.gotson.komga.domain.model.ReadStatus
 import org.gotson.komga.domain.model.SeriesCollection
@@ -15,11 +19,15 @@ import org.gotson.komga.domain.persistence.ReferentialRepository
 import org.gotson.komga.domain.persistence.SeriesCollectionRepository
 import org.gotson.komga.infrastructure.security.KomgaPrincipal
 import org.gotson.komga.infrastructure.swagger.PageAsQueryParam
-import org.gotson.komga.interfaces.api.WebPubGenerator
-import org.gotson.komga.interfaces.api.checkContentRestriction
+import org.gotson.komga.interfaces.api.CommonBookController
+import org.gotson.komga.interfaces.api.ContentRestrictionChecker
+import org.gotson.komga.interfaces.api.OpdsGenerator
+import org.gotson.komga.interfaces.api.dto.MEDIATYPE_OPDS_AUTHENTICATION_JSON_VALUE
 import org.gotson.komga.interfaces.api.dto.MEDIATYPE_OPDS_JSON_VALUE
+import org.gotson.komga.interfaces.api.dto.MEDIATYPE_OPDS_PUBLICATION_JSON_VALUE
 import org.gotson.komga.interfaces.api.dto.OpdsLinkRel
 import org.gotson.komga.interfaces.api.dto.WPLinkDto
+import org.gotson.komga.interfaces.api.dto.WPPublicationDto
 import org.gotson.komga.interfaces.api.opds.v2.dto.FacetDto
 import org.gotson.komga.interfaces.api.opds.v2.dto.FeedDto
 import org.gotson.komga.interfaces.api.opds.v2.dto.FeedGroupDto
@@ -33,12 +41,16 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.context.request.ServletWebRequest
 import org.springframework.web.server.ResponseStatusException
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 import org.springframework.web.util.UriComponentsBuilder
@@ -46,6 +58,7 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 
 private const val ROUTE_CATALOG = "catalog"
+const val ROUTE_AUTH = "auth"
 
 private const val RECOMMENDED_ITEMS_NUMBER = 5
 
@@ -58,7 +71,9 @@ class Opds2Controller(
   private val seriesDtoRepository: SeriesDtoRepository,
   private val bookDtoRepository: BookDtoRepository,
   private val referentialRepository: ReferentialRepository,
-  private val webPubGenerator: WebPubGenerator,
+  private val commonBookController: CommonBookController,
+  private val opdsGenerator: OpdsGenerator,
+  private val contentRestrictionChecker: ContentRestrictionChecker,
 ) {
   private fun linkStart() =
     WPLinkDto(
@@ -77,8 +92,7 @@ class Opds2Controller(
       templated = true,
     )
 
-  private fun uriBuilder(path: String) =
-    ServletUriComponentsBuilder.fromCurrentContextPath().pathSegment("opds", "v2").path(path)
+  private fun uriBuilder(path: String) = ServletUriComponentsBuilder.fromCurrentContextPath().pathSegment("opds", "v2").path(path)
 
   private fun linkPage(
     uriBuilder: UriComponentsBuilder,
@@ -105,18 +119,16 @@ class Opds2Controller(
   private fun linkSelf(
     path: String,
     type: String? = null,
-  ) =
-    linkSelf(uriBuilder(path), type)
+  ) = linkSelf(uriBuilder(path), type)
 
   private fun linkSelf(
     uriBuilder: UriComponentsBuilder,
     type: String? = null,
-  ) =
-    WPLinkDto(
-      rel = OpdsLinkRel.SELF,
-      href = uriBuilder.toUriString(),
-      type = type,
-    )
+  ) = WPLinkDto(
+    rel = OpdsLinkRel.SELF,
+    href = uriBuilder.toUriString(),
+    type = type,
+  )
 
   private fun getLibrariesFeedGroup(
     principal: KomgaPrincipal,
@@ -178,7 +190,7 @@ class Opds2Controller(
         principal.user.id,
         PageRequest.of(0, RECOMMENDED_ITEMS_NUMBER, Sort.by(Sort.Order.desc("readProgress.readDate"))),
         principal.user.restrictions,
-      ).map { webPubGenerator.toOpdsPublicationDto(it, true) }
+      ).map { opdsGenerator.toOpdsPublicationDto(it) }
 
     val onDeck =
       bookDtoRepository.findAllOnDeck(
@@ -186,7 +198,7 @@ class Opds2Controller(
         authorizedLibraryIds,
         Pageable.ofSize(RECOMMENDED_ITEMS_NUMBER),
         principal.user.restrictions,
-      ).map { webPubGenerator.toOpdsPublicationDto(it, true) }
+      ).map { opdsGenerator.toOpdsPublicationDto(it) }
 
     val latestBooks =
       bookDtoRepository.findAll(
@@ -198,7 +210,7 @@ class Opds2Controller(
         principal.user.id,
         PageRequest.of(0, RECOMMENDED_ITEMS_NUMBER, Sort.by(Sort.Order.desc("createdDate"))),
         principal.user.restrictions,
-      ).map { webPubGenerator.toOpdsPublicationDto(it, true) }
+      ).map { opdsGenerator.toOpdsPublicationDto(it) }
 
     val latestSeries =
       seriesDtoRepository.findAll(
@@ -286,7 +298,7 @@ class Opds2Controller(
         principal.user.id,
         PageRequest.of(page.pageNumber, page.pageSize, Sort.by(Sort.Order.desc("readProgress.readDate"))),
         principal.user.restrictions,
-      ).map { webPubGenerator.toOpdsPublicationDto(it, true) }
+      ).map { opdsGenerator.toOpdsPublicationDto(it) }
 
     val uriBuilder = uriBuilder("libraries${if (library != null) "/${library.id}" else ""}/keep-reading")
 
@@ -323,7 +335,7 @@ class Opds2Controller(
         authorizedLibraryIds,
         page,
         principal.user.restrictions,
-      ).map { webPubGenerator.toOpdsPublicationDto(it, true) }
+      ).map { opdsGenerator.toOpdsPublicationDto(it) }
 
     val uriBuilder = uriBuilder("libraries${if (library != null) "/${library.id}" else ""}/on-deck")
 
@@ -364,7 +376,7 @@ class Opds2Controller(
         principal.user.id,
         PageRequest.of(page.pageNumber, page.pageSize, Sort.by(Sort.Order.desc("createdDate"))),
         principal.user.restrictions,
-      ).map { webPubGenerator.toOpdsPublicationDto(it, true) }
+      ).map { opdsGenerator.toOpdsPublicationDto(it) }
 
     val uriBuilder = uriBuilder("libraries${if (library != null) "/${library.id}" else ""}/books/latest")
 
@@ -446,22 +458,18 @@ class Opds2Controller(
 
     val pageable = PageRequest.of(page.pageNumber, page.pageSize, Sort.by(Sort.Order.asc("metadata.titleSort")))
 
-    val entries =
-      seriesDtoRepository
-        .findAll(seriesSearch, principal.user.id, pageable, principal.user.restrictions)
-        .map { it.toWPLinkDto() }
+    val entries = seriesDtoRepository.findAll(seriesSearch, principal.user.id, pageable, principal.user.restrictions).map { it.toWPLinkDto() }
 
     val uriBuilder = uriBuilder("libraries${if (library != null) "/${library.id}" else ""}/browse")
 
     val publisherLinks =
-      referentialRepository.findAllPublishers(authorizedLibraryIds)
-        .map {
-          WPLinkDto(
-            title = it,
-            href = uriBuilder.cloneBuilder().queryParam("publisher", it).toUriString(),
-            type = MEDIATYPE_OPDS_JSON_VALUE,
-          )
-        }
+      referentialRepository.findAllPublishers(authorizedLibraryIds).map {
+        WPLinkDto(
+          title = it,
+          href = uriBuilder.cloneBuilder().queryParam("publisher", it).toUriString(),
+          type = MEDIATYPE_OPDS_JSON_VALUE,
+        )
+      }
 
     return FeedDto(
       metadata =
@@ -548,9 +556,7 @@ class Opds2Controller(
           deleted = false,
         )
 
-      val entries =
-        seriesDtoRepository.findAllByCollectionId(collection.id, seriesSearch, principal.user.id, pageable, principal.user.restrictions)
-          .map { it.toWPLinkDto() }
+      val entries = seriesDtoRepository.findAllByCollectionId(collection.id, seriesSearch, principal.user.id, pageable, principal.user.restrictions).map { it.toWPLinkDto() }
 
       val uriBuilder = uriBuilder("collections/$id")
 
@@ -643,7 +649,7 @@ class Opds2Controller(
           principal.user.restrictions,
         )
 
-      val entries = booksPage.map { webPubGenerator.toOpdsPublicationDto(it, true) }
+      val entries = booksPage.map { opdsGenerator.toOpdsPublicationDto(it) }
 
       val uriBuilder = uriBuilder("readlists/$id")
 
@@ -690,7 +696,7 @@ class Opds2Controller(
     @Parameter(hidden = true) page: Pageable,
   ): FeedDto =
     seriesDtoRepository.findByIdOrNull(id, "principal.user.id")?.let { series ->
-      principal.user.checkContentRestriction(series)
+      contentRestrictionChecker.checkContentRestriction(principal.user, series)
 
       val bookSearch =
         BookSearchWithReadProgress(
@@ -701,22 +707,19 @@ class Opds2Controller(
         )
       val pageable = PageRequest.of(page.pageNumber, page.pageSize, Sort.by(Sort.Order.asc("metadata.numberSort")))
 
-      val entries =
-        bookDtoRepository.findAll(bookSearch, principal.user.id, pageable, principal.user.restrictions)
-          .map { webPubGenerator.toOpdsPublicationDto(it, true) }
+      val entries = bookDtoRepository.findAll(bookSearch, principal.user.id, pageable, principal.user.restrictions).map { opdsGenerator.toOpdsPublicationDto(it) }
 
       val uriBuilder = uriBuilder("series/$id")
 
       val tagLinks =
-        referentialRepository.findAllBookTagsBySeries(series.id, null)
-          .map {
-            WPLinkDto(
-              title = it,
-              href = uriBuilder.cloneBuilder().queryParam("tag", it).toUriString(),
-              type = MEDIATYPE_OPDS_JSON_VALUE,
-              rel = if (it == tag) OpdsLinkRel.SELF else null,
-            )
-          }
+        referentialRepository.findAllBookTagsBySeries(series.id, null).map {
+          WPLinkDto(
+            title = it,
+            href = uriBuilder.cloneBuilder().queryParam("tag", it).toUriString(),
+            type = MEDIATYPE_OPDS_JSON_VALUE,
+            rel = if (it == tag) OpdsLinkRel.SELF else null,
+          )
+        }
 
       FeedDto(
         metadata =
@@ -749,32 +752,29 @@ class Opds2Controller(
     val pageable = PageRequest.of(0, 20, Sort.by("relevance"))
 
     val resultsSeries =
-      seriesDtoRepository
-        .findAll(
-          SeriesSearchWithReadProgress(
-            libraryIds = principal.user.getAuthorizedLibraryIds(null),
-            searchTerm = query,
-            oneshot = false,
-            deleted = false,
-          ),
-          principal.user.id,
-          pageable,
-          principal.user.restrictions,
-        )
-        .map { it.toWPLinkDto() }
+      seriesDtoRepository.findAll(
+        SeriesSearchWithReadProgress(
+          libraryIds = principal.user.getAuthorizedLibraryIds(null),
+          searchTerm = query,
+          oneshot = false,
+          deleted = false,
+        ),
+        principal.user.id,
+        pageable,
+        principal.user.restrictions,
+      ).map { it.toWPLinkDto() }
 
     val resultsBooks =
-      bookDtoRepository
-        .findAll(
-          BookSearchWithReadProgress(
-            libraryIds = principal.user.getAuthorizedLibraryIds(null),
-            searchTerm = query,
-            deleted = false,
-          ),
-          principal.user.id,
-          pageable,
-          principal.user.restrictions,
-        ).map { webPubGenerator.toOpdsPublicationDto(it, true) }
+      bookDtoRepository.findAll(
+        BookSearchWithReadProgress(
+          libraryIds = principal.user.getAuthorizedLibraryIds(null),
+          searchTerm = query,
+          deleted = false,
+        ),
+        principal.user.id,
+        pageable,
+        principal.user.restrictions,
+      ).map { opdsGenerator.toOpdsPublicationDto(it) }
 
     val resultsCollections =
       collectionRepository.findAll(
@@ -814,6 +814,69 @@ class Opds2Controller(
         ),
     )
   }
+
+  @GetMapping(value = [ROUTE_AUTH], produces = [MEDIATYPE_OPDS_AUTHENTICATION_JSON_VALUE])
+  fun getAuthDocument() = opdsGenerator.generateOpdsAuthDocument()
+
+  @ApiResponse(content = [Content(mediaType = "image/*", schema = Schema(type = "string", format = "binary"))])
+  @GetMapping(
+    value = ["books/{bookId}/pages/{pageNumber}"],
+    produces = [MediaType.ALL_VALUE],
+  )
+  @PreAuthorize("hasRole('$ROLE_PAGE_STREAMING')")
+  fun getBookPage(
+    @AuthenticationPrincipal principal: KomgaPrincipal,
+    request: ServletWebRequest,
+    @PathVariable bookId: String,
+    @PathVariable pageNumber: Int,
+    @Parameter(
+      description = "Convert the image to the provided format.",
+      schema = Schema(allowableValues = ["jpeg", "png"]),
+    )
+    @RequestParam(value = "convert", required = false)
+    convertTo: String?,
+  ): ResponseEntity<ByteArray> =
+    commonBookController.getBookPageInternal(bookId, pageNumber, convertTo, request, principal, null)
+
+  @GetMapping(
+    value = ["books/{bookId}/manifest"],
+    produces = [MEDIATYPE_OPDS_PUBLICATION_JSON_VALUE],
+  )
+  fun getWebPubManifest(
+    @AuthenticationPrincipal principal: KomgaPrincipal,
+    @PathVariable bookId: String,
+  ): WPPublicationDto =
+    commonBookController.getWebPubManifestInternal(principal, bookId, opdsGenerator)
+
+  @GetMapping(
+    value = ["books/{bookId}/manifest/epub"],
+    produces = [MEDIATYPE_OPDS_PUBLICATION_JSON_VALUE],
+  )
+  fun getWebPubManifestEpub(
+    @AuthenticationPrincipal principal: KomgaPrincipal,
+    @PathVariable bookId: String,
+  ): WPPublicationDto =
+    commonBookController.getWebPubManifestEpubInternal(principal, bookId, opdsGenerator)
+
+  @GetMapping(
+    value = ["books/{bookId}/manifest/pdf"],
+    produces = [MEDIATYPE_OPDS_PUBLICATION_JSON_VALUE],
+  )
+  fun getWebPubManifestPdf(
+    @AuthenticationPrincipal principal: KomgaPrincipal,
+    @PathVariable bookId: String,
+  ): WPPublicationDto =
+    commonBookController.getWebPubManifestPdfInternal(principal, bookId, opdsGenerator)
+
+  @GetMapping(
+    value = ["books/{bookId}/manifest/divina"],
+    produces = [MEDIATYPE_OPDS_PUBLICATION_JSON_VALUE],
+  )
+  fun getWebPubManifestDivina(
+    @AuthenticationPrincipal principal: KomgaPrincipal,
+    @PathVariable bookId: String,
+  ): WPPublicationDto =
+    commonBookController.getWebPubManifestDivinaInternal(principal, bookId, opdsGenerator)
 
   private fun Library.toWPLinkDto(): WPLinkDto =
     WPLinkDto(

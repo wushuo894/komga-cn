@@ -14,6 +14,7 @@ import org.gotson.komga.infrastructure.mediacontainer.ContentDetector
 import org.jsoup.Jsoup
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import org.springframework.web.util.UriUtils
 import java.net.URLDecoder
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -152,7 +153,7 @@ class EpubExtractor(
     val pages =
       spine.map { page ->
         MediaFile(
-          normalizeHref(epub.opfDir, page.href),
+          normalizeHref(epub.opfDir, UriUtils.decode(page.href, Charsets.UTF_8)),
           page.mediaType,
           MediaFile.SubType.EPUB_PAGE,
         )
@@ -161,7 +162,7 @@ class EpubExtractor(
     val assets =
       epub.manifest.values.filterNot { spine.contains(it) }.map {
         MediaFile(
-          normalizeHref(epub.opfDir, it.href),
+          normalizeHref(epub.opfDir, UriUtils.decode(it.href, Charsets.UTF_8)),
           it.mediaType,
           MediaFile.SubType.EPUB_ASSET,
         )
