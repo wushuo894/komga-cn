@@ -68,6 +68,8 @@ class BookLifecycle(
   private val komgaSettingsProvider: KomgaSettingsProvider,
   @Qualifier("pdfImageType")
   private val pdfImageType: ImageType,
+  @Qualifier("mobiImageType")
+  private val mobiImageType: ImageType,
 ) {
   private val resizeTargetFormat = ImageType.JPEG
 
@@ -298,7 +300,7 @@ class BookLifecycle(
     val pageMediaType =
       when (media.profile) {
           MediaProfile.PDF -> pdfImageType.mediaType
-          MediaProfile.MOBI -> pdfImageType.mediaType
+          MediaProfile.MOBI -> mobiImageType.mediaType
           else -> media.pages[number - 1].mediaType
       }
 

@@ -117,6 +117,8 @@ class OpdsController(
   private val contentRestrictionChecker: ContentRestrictionChecker,
   @Qualifier("pdfImageType")
   private val pdfImageType: ImageType,
+  @Qualifier("mobiImageType")
+  private val mobiImageType: ImageType,
 ) {
   private val komgaAuthor = OpdsAuthor("Komga", URI("https://github.com/gotson/komga"))
 
@@ -759,7 +761,7 @@ class OpdsController(
       when (media.profile) {
         MediaProfile.DIVINA -> media.pages.map { it.mediaType }.distinct()
         MediaProfile.PDF -> listOf(pdfImageType.mediaType)
-        MediaProfile.MOBI -> listOf(pdfImageType.mediaType)
+        MediaProfile.MOBI -> listOf(mobiImageType.mediaType)
         MediaProfile.EPUB -> if (media.epubDivinaCompatible) media.pages.map { it.mediaType }.distinct() else emptyList()
         null -> emptyList()
       }
@@ -776,6 +778,7 @@ class OpdsController(
     val thumbnailMediaType =
       when (media.profile) {
         MediaProfile.PDF -> pdfImageType.mediaType
+        MediaProfile.MOBI -> mobiImageType.mediaType
         else -> "image/jpeg"
       }
 

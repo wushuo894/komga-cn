@@ -314,12 +314,10 @@ class BookDtoDao(
         .where(b.ID.eq(bookId))
         .fetchOne()!!
     val seriesId = record.get(0, String::class.java)
-    val numberSort = record.get(1, Float::class.java)
 
     return selectBase(userId)
       .where(b.SERIES_ID.eq(seriesId))
       .orderBy(d.NUMBER_SORT.let { if (next) it.asc() else it.desc() })
-      .seek(numberSort)
       .limit(1)
       .fetchAndMap()
       .firstOrNull()

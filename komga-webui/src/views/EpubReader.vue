@@ -298,7 +298,7 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import D2Reader, {Locator, ReadingPosition} from '@d-i-t-a/reader'
+import D2Reader, {Locator} from '@d-i-t-a/reader'
 import {bookManifestUrl, bookPositionsUrl} from '@/functions/urls'
 import {BookDto} from '@/types/komga-books'
 import {getBookTitleCompact} from '@/functions/book-title'
