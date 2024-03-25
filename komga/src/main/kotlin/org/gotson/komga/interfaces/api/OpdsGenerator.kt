@@ -25,7 +25,8 @@ class OpdsGenerator(
   imageConverter: ImageConverter,
   bookAnalyzer: BookAnalyzer,
   mediaRepository: MediaRepository,
-) : WebPubGenerator(thumbnailType, imageConverter, bookAnalyzer, mediaRepository, listOf("opds", "v2")) {
+) : WebPubGenerator(thumbnailType, imageConverter, bookAnalyzer, mediaRepository) {
+  override val pathSegments: List<String> = listOf("opds", "v1")
   fun toOpdsPublicationDto(bookDto: BookDto): WPPublicationDto =
     toBasePublicationDto(bookDto).copy(images = buildThumbnailLinkDtos(bookDto.id))
 
