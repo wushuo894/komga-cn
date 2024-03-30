@@ -39,8 +39,10 @@ private fun ncxElementToTocEntry(
   ncxDir: Path?,
 ): EpubTocEntry? {
   val title = element.selectFirst("navLabel > text")?.text()
-  val href = element.selectFirst("content")?.attr("src")?.let { UriUtils.decode(it, Charsets.UTF_8) }
+  val href = element.selectFirst("content")?.attr("src")?.let { URLDecoder.decode(it, Charsets.UTF_8) }
   val children = element.select(":root > ${navType.level2}").toList().mapNotNull { ncxElementToTocEntry(navType, it, ncxDir) }
-  if (title != null) return EpubTocEntry(title, href?.let { normalizeHref(ncxDir, it) }, children)
+  if (title != null) {
+    return EpubTocEntry(title, href?.let { normalizeHref(ncxDir, it) }, children)
+  }
   return null
 }
