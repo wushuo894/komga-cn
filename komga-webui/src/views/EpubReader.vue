@@ -164,7 +164,7 @@
                  v-if="!verticalScroll"
     >
       <v-row>
-        <v-col cols="auto">
+        <v-col cols="auto" style="white-space: nowrap;overflow: hidden;text-overflow: ellipsis;">
           {{ $t('epubreader.page_of', {page: progressionPage, count: progressionPageCount}) }}
           ({{ progressionTitle || $t('epubreader.current_chapter') }})
         </v-col>
