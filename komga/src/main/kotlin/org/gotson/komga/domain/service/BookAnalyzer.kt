@@ -225,7 +225,7 @@ class BookAnalyzer(
           )
         }
 
-      MediaProfile.MOBI -> mobiExtractor.getPageContentAsImage(book.book.path, 1)
+      MediaProfile.MOBI -> mobiExtractor.getCover(book.book.path)
       MediaProfile.PDF -> pdfExtractor.getPageContentAsImage(book.book.path, 1)
       MediaProfile.EPUB -> epubExtractor.getCover(book.book.path)
       null -> null

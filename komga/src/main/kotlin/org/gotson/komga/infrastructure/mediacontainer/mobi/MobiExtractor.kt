@@ -10,11 +10,13 @@ import org.rr.mobi4java.MobiReader
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.nio.file.Path
 import java.util.Objects
 import java.util.concurrent.atomic.AtomicInteger
 import javax.imageio.ImageIO
 import kotlin.math.roundToInt
+
 
 @Service
 class MobiExtractor(
@@ -58,6 +60,80 @@ class MobiExtractor(
     val reader = MobiReader().read(path.toFile())
     val images = reader.images
     return TypedBytes(images[pageNumber], MediaType.MOBI.type)
+  }
+
+  fun getCover(path: Path): TypedBytes? {
+    val reader = MobiReader().read(path.toFile())
+    val images = reader.images.stream().map { image ->
+      try {
+        ImageIO.read(ByteArrayInputStream(image))
+      } catch (e: Exception) {
+        null
+      }
+    }.filter(Objects::nonNull).toList()
+
+    if (images.isEmpty()) {
+      return null
+    }
+
+    val widthMap = mutableMapOf<Int, Int>()
+    val heightMap = mutableMapOf<Int, Int>()
+
+    for (image in images) {
+      val width = image?.width ?: 0
+      val height = image?.height ?: 0
+
+      val countWidth = widthMap.getOrDefault(width, 0)
+      val countHeight = heightMap.getOrDefault(height, 0)
+
+      widthMap[width] = countWidth + 1
+      heightMap[height] = countHeight + 1
+    }
+
+    val avgWidth = widthMap.entries
+      .stream()
+      .sorted(Comparator.comparingInt { (_, v) -> v })
+      .map { (k, _) -> k }
+      .findFirst()
+      .get()
+
+    val avgHeight = heightMap.entries
+      .stream()
+      .sorted(Comparator.comparingInt { (_, v) -> v })
+      .map { (k, _) -> k }
+      .findFirst()
+      .get()
+
+
+    val findFirst = images.stream()
+      .filter { img -> img?.width == avgWidth }
+      .filter { img -> img?.height == avgHeight }
+      .findFirst()
+    if (findFirst.isEmpty) {
+      return getPageContentAsImage(path, 1)
+    }
+    val get = findFirst.get()
+
+    var ret: TypedBytes
+    val outputStream = ByteArrayOutputStream()
+    try {
+      ImageIO.write(get, "jpg", outputStream)
+      outputStream.flush()
+      val bytes = outputStream.toByteArray()
+      ret = TypedBytes(
+        bytes,
+        MediaType.MOBI.type,
+      )
+    } catch (e: Exception) {
+      ret = getPageContentAsImage(path, 1)
+    } finally {
+      try {
+        outputStream.close()
+      } catch (e: Exception) {
+        e.printStackTrace()
+      }
+    }
+    return ret
   }
 
   private fun PDPage.getScale() = getScale(cropBox.width, cropBox.height)

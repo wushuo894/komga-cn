@@ -7,6 +7,9 @@ import org.jetbrains.kotlin.util.prefixIfNot
 
 repositories {
   maven {
+    url = uri("https://maven.aliyun.com/repository/public/")
+  }
+  maven {
     url = uri("https://raw.github.com/rrauschenbach/mobi-api4java/mvn-repo/")
   }
 }
