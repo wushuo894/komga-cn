@@ -2,7 +2,6 @@ package org.gotson.komga.infrastructure.mediacontainer.epub
 
 import org.gotson.komga.domain.model.EpubTocEntry
 import org.jsoup.nodes.Document
-import org.springframework.web.util.UriUtils
 import java.net.URLDecoder
 import java.nio.file.Path
 import java.nio.file.Paths

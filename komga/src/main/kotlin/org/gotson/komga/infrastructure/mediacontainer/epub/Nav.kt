@@ -3,7 +3,6 @@ package org.gotson.komga.infrastructure.mediacontainer.epub
 import org.gotson.komga.domain.model.EpubTocEntry
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
-import org.springframework.web.util.UriUtils
 import java.net.URLDecoder
 import java.nio.file.Path
 import java.util.Objects

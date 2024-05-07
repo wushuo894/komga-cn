@@ -11,6 +11,7 @@ import org.gotson.komga.domain.model.MediaContainerEntry
 import org.gotson.komga.domain.model.MediaType
 import org.gotson.komga.domain.model.TypedBytes
 import org.gotson.komga.infrastructure.image.ImageType
+import org.gotson.komga.infrastructure.mediacontainer.ExtractorUtil
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import java.io.ByteArrayOutputStream
@@ -38,6 +39,32 @@ class PdfExtractor(
         MediaContainerEntry(name = "${index + 1}", dimension = dimension)
       }
     }
+
+  /**
+   * 获取封面
+   */
+  fun getCover(path: Path): TypedBytes? {
+    val pdf = Loader.loadPDF(path.toFile())
+    val numberOfPages = pdf.numberOfPages
+    val byteArrays = mutableListOf<ByteArray>()
+
+    for (i in 0 until numberOfPages) {
+      val page = pdf.getPage(i)
+
+      val image = PDFRenderer(pdf).renderImage(i - 1, page.getScale(), RGB)
+      val bytes =
+        ByteArrayOutputStream().use { out ->
+          ImageIO.write(image, imageType.imageIOFormat, out)
+          out.toByteArray()
+        }
+      byteArrays.add(bytes)
+    }
+
+    return TypedBytes(
+      ExtractorUtil.getProportionCover(byteArrays) { byteArrays[0] },
+      MediaType.MOBI.type,
+    )
+  }
 
   fun getPageContentAsImage(
     path: Path,
