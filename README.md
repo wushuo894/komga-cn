@@ -1,6 +1,6 @@
 # ![app icon](./.github/readme-images/app-icon.png) Komga
 
-在原版基础上对 MOBI 做了支持
+在原版基础上对 MOBI 格式的漫画 做了支持
 
 修复了中文 EPUB 问题
 
