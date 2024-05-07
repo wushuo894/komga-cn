@@ -1,4 +1,4 @@
-# ![app icon](./.github/readme-images/app-icon.png) Komga
+# ![app icon](https://github.com/gotson/komga/raw/master/.github/readme-images/app-icon.png) Komga
 
 在原版基础上对 MOBI 格式的漫画 做了支持
 
