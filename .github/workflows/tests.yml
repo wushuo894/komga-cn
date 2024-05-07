@@ -1,13 +1,6 @@
 name: Tests
 
 on:
-  pull_request:
-    paths-ignore:
-      - 'komga-webui/src/locales/*'
-      - 'komga-tray/src/main/resources/org/gotson/komga/*'
-  push:
-    branches-ignore:
-      - 'dependabot/**'
   workflow_dispatch:
 
 jobs:

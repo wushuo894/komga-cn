@@ -1,11 +1,6 @@
 name: Update DockerHub description
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'DOCKERHUB.md'
   workflow_dispatch:
 
 jobs:
@@ -21,4 +16,4 @@ jobs:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKERHUB_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           DOCKERHUB_REPOSITORY: wushuo894/komga-cn
-          README_FILEPATH: ./DOCKERHUB.md
+          README_FILEPATH: ./README.md
