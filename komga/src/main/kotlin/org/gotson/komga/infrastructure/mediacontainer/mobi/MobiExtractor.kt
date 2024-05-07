@@ -73,7 +73,7 @@ class MobiExtractor(
     }.filter(Objects::nonNull).toList()
 
     if (images.isEmpty()) {
-      return null
+      return getPageContentAsImage(path, 1)
     }
 
     val widthMap = mutableMapOf<Int, Int>()
