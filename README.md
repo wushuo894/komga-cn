@@ -7,3 +7,14 @@
 增强封面获取逻辑
 
 支持中文拼音首字母索引
+
+github: https://github.com/wushuo894/komga-cn
+
+`docker run -d \
+  --name komga-cn \
+  -v ./data:/data \
+  -v ./config:/config \
+  -p 25600:25600 \
+  -e TZ=Asia/Shanghai \
+  --restart always \
+  wushuo894/komga-cn`
