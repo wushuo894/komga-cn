@@ -6,6 +6,7 @@ on:
       - master
     paths:
       - 'DOCKERHUB.md'
+  workflow_dispatch:
 
 jobs:
   update_docker_description:
