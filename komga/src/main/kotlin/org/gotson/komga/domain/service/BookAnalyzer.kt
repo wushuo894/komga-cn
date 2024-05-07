@@ -161,13 +161,13 @@ class BookAnalyzer(
       pageCount = manifest.pageCount,
       epubDivinaCompatible = manifest.divinaPages.isNotEmpty(),
       extension =
-        MediaExtensionEpub(
-          toc = manifest.toc,
-          landmarks = manifest.landmarks,
-          pageList = manifest.pageList,
-          isFixedLayout = manifest.isFixedLayout,
-          positions = manifest.positions,
-        ),
+      MediaExtensionEpub(
+        toc = manifest.toc,
+        landmarks = manifest.landmarks,
+        pageList = manifest.pageList,
+        isFixedLayout = manifest.isFixedLayout,
+        positions = manifest.positions,
+      ),
       comment = entriesErrorSummary,
     )
   }
@@ -217,16 +217,9 @@ class BookAnalyzer(
 
   fun getPoster(book: BookWithMedia): TypedBytes? =
     when (book.media.profile) {
-      MediaProfile.DIVINA ->
-        divinaExtractors[book.media.mediaType]?.getEntryStream(book.book.path, book.media.pages.first().fileName)?.let {
-          TypedBytes(
-            it,
-            book.media.pages.first().mediaType,
-          )
-        }
-
+      MediaProfile.DIVINA -> divinaExtractors[book.media.mediaType]?.getCover(book.book.path)
       MediaProfile.MOBI -> mobiExtractor.getCover(book.book.path)
-      MediaProfile.PDF -> pdfExtractor.getPageContentAsImage(book.book.path, 1)
+      MediaProfile.PDF -> pdfExtractor.getCover(book.book.path)
       MediaProfile.EPUB -> epubExtractor.getCover(book.book.path)
       null -> null
     }

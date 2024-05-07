@@ -6,8 +6,10 @@ import net.greypanther.natsort.CaseInsensitiveSimpleNaturalComparator
 import org.gotson.komga.domain.model.MediaContainerEntry
 import org.gotson.komga.domain.model.MediaType
 import org.gotson.komga.domain.model.MediaUnsupportedException
+import org.gotson.komga.domain.model.TypedBytes
 import org.gotson.komga.infrastructure.image.ImageAnalyzer
 import org.gotson.komga.infrastructure.mediacontainer.ContentDetector
+import org.gotson.komga.infrastructure.mediacontainer.ExtractorUtil
 import org.springframework.stereotype.Service
 import java.nio.file.Path
 
@@ -59,4 +61,31 @@ class RarExtractor(
       val header = rar.fileHeaders.find { it.fileName == entryName }
       rar.getInputStream(header).use { it.readBytes() }
     }
+
+  override fun getEntryStreamList(path: Path): List<ByteArray> {
+    Archive(path.toFile()).use { rar ->
+      if (rar.isPasswordProtected) throw MediaUnsupportedException("Encrypted RAR archives are not supported", "ERR_1002")
+      if (rar.mainHeader.isSolid) throw MediaUnsupportedException("Solid RAR archives are not supported", "ERR_1003")
+      if (rar.mainHeader.isMultiVolume) throw MediaUnsupportedException("Multi-Volume RAR archives are not supported", "ERR_1004")
+      return rar.fileHeaders
+        .filter { !it.isDirectory }
+        .map { entry ->
+          try {
+            rar.getInputStream(entry).use { it.readBytes() }
+          } catch (e: Exception) {
+            logger.warn(e) { "Could not analyze entry: ${entry.fileName}" }
+            ByteArray(0)
+          }
+        }.toList()
+    }
+  }
+
+  override fun getCover(path: Path): TypedBytes {
+    val byteArrays = getEntryStreamList(path)
+    return TypedBytes(
+      ExtractorUtil.getProportionCover(byteArrays) { byteArrays[0] },
+      MediaType.RAR_GENERIC.type,
+    )
+  }
+
 }
