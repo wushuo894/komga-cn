@@ -80,5 +80,5 @@ export default Vue.extend({
 })
 </script>
 <style>
-@import "styles/global.css";
+@import "@/styles/global.css";
 </style>
