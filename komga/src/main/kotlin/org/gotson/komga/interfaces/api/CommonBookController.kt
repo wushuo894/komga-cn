@@ -10,6 +10,7 @@ import org.gotson.komga.domain.model.BookWithMedia
 import org.gotson.komga.domain.model.EntryNotFoundException
 import org.gotson.komga.domain.model.ImageConversionException
 import org.gotson.komga.domain.model.Media
+import org.gotson.komga.domain.model.MediaFile
 import org.gotson.komga.domain.model.MediaNotReadyException
 import org.gotson.komga.domain.model.MediaProfile
 import org.gotson.komga.domain.model.MediaUnsupportedException
@@ -292,7 +293,7 @@ class CommonBookController(
     if (media.profile != MediaProfile.EPUB) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Book media type '${media.mediaType}' not compatible with requested profile")
     if (!isFont) contentRestrictionChecker.checkContentRestriction(principal!!.user, book)
 
-    val res = media.files.firstOrNull { it.fileName == resourceName } ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
+    val res = media.files.firstOrNull { it.fileName == resourceName } ?: MediaFile(resourceName)
     val bytes =
       try {
         bookAnalyzer.getFileContent(BookWithMedia(book, media), resourceName)
