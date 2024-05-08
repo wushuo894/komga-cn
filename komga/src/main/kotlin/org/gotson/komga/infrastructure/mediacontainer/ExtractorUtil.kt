@@ -1,4 +1,4 @@
-package org.gotson.komga.infrastructure.mediacontainer;
+package org.gotson.komga.infrastructure.mediacontainer
 
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
@@ -96,37 +96,32 @@ class ExtractorUtil {
     }
 
     /**
-     * 白色或黑色占比是否过高
+     * 纯色占比是否过高
      */
     private fun getImageColorPercentage(image: BufferedImage): Boolean {
       val width = image.width
       val height = image.height
-
-      var whitePixels = 0
-      var blackPixels = 0
+      val map = mutableMapOf<Int, Int>()
 
       for (x in 0 until width) {
         for (y in 0 until height) {
           val rgb = image.getRGB(x, y)
-          val red = (rgb shr 16) and 0xFF
-          val green = (rgb shr 8) and 0xFF
-          val blue = rgb and 0xFF
 
-          if (red == 255 && green == 255 && blue == 255) {
-            whitePixels++
-          }
-
-          if (red == 0 && green == 0 && blue == 0) {
-            blackPixels++
-          }
+          map[rgb] = map.getOrDefault(rgb, 0) + 1
         }
       }
 
-      val totalPixels = width * height
-      val whitePercentage = whitePixels.toDouble() / totalPixels * 100
-      val blackPercentage = blackPixels.toDouble() / totalPixels * 100
+      if (map.isEmpty()) {
+        return false
+      }
 
-      return whitePercentage >= 80 || blackPercentage >= 80
+
+      val totalPixels = width * height
+
+      val max = map.values
+        .stream().mapToInt { it }.max().asInt
+
+      return 1.0 * max / totalPixels * 100 >= 85
     }
   }
 
