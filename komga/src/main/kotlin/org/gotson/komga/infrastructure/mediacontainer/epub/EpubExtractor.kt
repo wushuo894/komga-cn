@@ -1,5 +1,6 @@
 package org.gotson.komga.infrastructure.mediacontainer.epub
 
+import cn.hutool.core.io.file.FileNameUtil
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.apache.commons.compress.archivers.ArchiveEntry
 import org.apache.commons.compress.archivers.zip.ZipFile
@@ -134,7 +135,7 @@ class EpubExtractor(
    * 生成文字封面
    */
   fun generateCover(s: String): TypedBytes? {
-    var name = s
+    var name = FileNameUtil.mainName(s)
     if (name.length > 24) {
       name = name.substring(0, 22) + "..."
     }
@@ -170,18 +171,16 @@ class EpubExtractor(
     }
     graphics.dispose()
 
-    val byteArrayOutputStream = ByteArrayOutputStream()
-
-    ImageIO.write(image, "png", byteArrayOutputStream)
-
-    byteArrayOutputStream.flush()
-    byteArrayOutputStream.use {
-      val typedBytes = TypedBytes(
-        it.toByteArray(),
-        "image/",
-      )
-      return typedBytes
-    }
+    ByteArrayOutputStream()
+      .use {
+        ImageIO.write(image, "png", it)
+        it.flush()
+        val typedBytes = TypedBytes(
+          it.toByteArray(),
+          "image/",
+        )
+        return typedBytes
+      }
   }
 
   fun getManifest(

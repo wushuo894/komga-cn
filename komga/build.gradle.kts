@@ -100,6 +100,7 @@ dependencies {
   implementation("org.apache.pdfbox:pdfbox:3.0.1")
   implementation("net.grey-panther:natural-comparator:1.1")
   implementation("org.jsoup:jsoup:1.17.2")
+  implementation("cn.hutool:hutool-all:5.8.27")
 
   implementation("net.coobird:thumbnailator:0.4.20")
   runtimeOnly("com.twelvemonkeys.imageio:imageio-jpeg:3.10.1")
