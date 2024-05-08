@@ -121,7 +121,7 @@ class ExtractorUtil {
       val max = map.values
         .stream().mapToInt { it }.max().asInt
 
-      return 1.0 * max / totalPixels * 100 >= 85
+      return 1.0 * max / totalPixels * 100 >= 75
     }
   }
 
