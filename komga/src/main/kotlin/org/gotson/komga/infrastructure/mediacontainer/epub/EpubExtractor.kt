@@ -1,6 +1,11 @@
 package org.gotson.komga.infrastructure.mediacontainer.epub
 
+import cn.hutool.core.img.FontUtil
+import cn.hutool.core.io.FileUtil
+import cn.hutool.core.io.IoUtil
 import cn.hutool.core.io.file.FileNameUtil
+import cn.hutool.core.io.resource.ResourceUtil
+import cn.hutool.extra.spring.SpringUtil
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.apache.commons.compress.archivers.ArchiveEntry
 import org.apache.commons.compress.archivers.zip.ZipFile
@@ -15,11 +20,16 @@ import org.gotson.komga.infrastructure.mediacontainer.ContentDetector
 import org.gotson.komga.infrastructure.mediacontainer.ExtractorUtil
 import org.jsoup.Jsoup
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.web.WebProperties.Resources
+import org.springframework.core.io.ResourceLoader
 import org.springframework.stereotype.Service
 import java.awt.Color
 import java.awt.Font
 import java.awt.image.BufferedImage
+import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.InputStream
 import java.net.URLDecoder
 import java.nio.file.Path
 import java.util.Objects
@@ -101,8 +111,13 @@ class EpubExtractor(
     // 先判断有没有 cover
     val zip = ZipFile(path.toFile())
     val entries = zip.entries.toList()
+      .filter(Objects::nonNull)
       .filter { item ->
         listOf(".jpg", ".png", ".jpeg").any { item.name.endsWith(it) }
+      }
+      .filter {
+        val bufferedImage = zip.getInputStream(it).use { it1 -> ImageIO.read(it1) }
+        Objects.nonNull(bufferedImage)
       }
     for (entry in entries) {
       for (s in listOf("cover.jpg", "cover.png", "cover.jpeg")) {
@@ -110,6 +125,9 @@ class EpubExtractor(
           continue
         }
         val bufferedImage = zip.getInputStream(entry).use { ImageIO.read(it) }
+        if (Objects.isNull(bufferedImage)) {
+          continue
+        }
         if (ExtractorUtil.getImageColorPercentage(bufferedImage)) {
           continue
         }
@@ -125,7 +143,7 @@ class EpubExtractor(
     }
 
     val bufferedImage = zip.getInputStream(entries.firstOrNull()).use { ImageIO.read(it) }
-    if (ExtractorUtil.getImageColorPercentage(bufferedImage)) {
+    if (Objects.isNull(bufferedImage) || ExtractorUtil.getImageColorPercentage(bufferedImage)) {
       return generateCover(path.name)
     }
     // 没有找到 cover 直接使用第一个图片
@@ -151,8 +169,25 @@ class EpubExtractor(
     graphics.color = Color.WHITE;
     graphics.fillRect(0, 0, width, height);
 
-    val font = Font("Arial", Font.BOLD, 240)
-    graphics.font = font
+    var font: Font? = null
+    var inputStream: InputStream? = null
+    try {
+
+      val applicationContext = SpringUtil.getApplicationContext()
+      val resource = applicationContext
+        .getResource("classpath:font/simhei.ttf")
+      inputStream = resource.inputStream
+      font = FontUtil.createFont(inputStream.use { ByteArrayInputStream(it.readAllBytes()) })
+      logger.info { "classpath:font/simhei.ttf  ok" }
+    } catch (e: Exception) {
+      logger.error { e }
+    } finally {
+      IoUtil.close(inputStream)
+    }
+
+    if (Objects.nonNull(font)) {
+      graphics.font = font?.deriveFont(240f)
+    }
     graphics.color = Color.BLACK
 
     val fontMetrics = graphics.fontMetrics
@@ -183,6 +218,7 @@ class EpubExtractor(
           it.toByteArray(),
           "image/",
         )
+        FileUtil.writeBytes(typedBytes.bytes, File("D://test.jpg"))
         return typedBytes
       }
   }
