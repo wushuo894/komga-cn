@@ -14,11 +14,17 @@ import org.gotson.komga.infrastructure.mediacontainer.ContentDetector
 import org.jsoup.Jsoup
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.awt.Color
+import java.awt.Font
+import java.awt.image.BufferedImage
+import java.io.ByteArrayOutputStream
 import java.net.URLDecoder
 import java.nio.file.Path
 import java.util.Objects
+import javax.imageio.ImageIO
 import kotlin.io.path.Path
 import kotlin.io.path.invariantSeparatorsPathString
+import kotlin.io.path.name
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
@@ -84,7 +90,7 @@ class EpubExtractor(
           mediaType,
         )
       } catch (e: Exception) {
-        null
+        generateCover(path.name)
       }
     }
 
@@ -112,7 +118,7 @@ class EpubExtractor(
     if (Objects.nonNull(entries.firstOrNull())) {
       val inputStream = zip.getInputStream(entries.firstOrNull())
       if (Objects.isNull(inputStream)) {
-        return null
+        return generateCover(path.name)
       }
       // 没有找到 cover 直接使用第一个图片
       return TypedBytes(
@@ -121,7 +127,61 @@ class EpubExtractor(
       )
     }
 
-    return null
+    return generateCover(path.name)
+  }
+
+  /**
+   * 生成文字封面
+   */
+  fun generateCover(s: String): TypedBytes? {
+    var name = s
+    if (name.length > 24) {
+      name = name.substring(0, 22) + "..."
+    }
+
+    val width = 2120
+    val height = 3000
+    val image = BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
+    val graphics = image.graphics
+    graphics.color = Color.WHITE;
+    graphics.fillRect(0, 0, width, height);
+
+    val font = Font("Arial", Font.BOLD, 240)
+    graphics.font = font
+    graphics.color = Color.BLACK
+
+    val fontMetrics = graphics.fontMetrics
+
+    var sb = ""
+    var i = 0;
+
+    val split = name.split("")
+    for ((index, s) in split.withIndex()) {
+      val ss = sb + s
+      var stringWidth = fontMetrics.stringWidth(ss)
+      if (stringWidth < width && split.size > index + 1) {
+        sb = ss
+        continue
+      }
+      stringWidth = fontMetrics.stringWidth(sb)
+      graphics.drawString(sb, (width - stringWidth) / 2, (height * 0.25).roundToInt() + (i * fontMetrics.height))
+      sb = s
+      i++
+    }
+    graphics.dispose()
+
+    val byteArrayOutputStream = ByteArrayOutputStream()
+
+    ImageIO.write(image, "png", byteArrayOutputStream)
+
+    byteArrayOutputStream.flush()
+    byteArrayOutputStream.use {
+      val typedBytes = TypedBytes(
+        it.toByteArray(),
+        "image/",
+      )
+      return typedBytes
+    }
   }
 
   fun getManifest(
