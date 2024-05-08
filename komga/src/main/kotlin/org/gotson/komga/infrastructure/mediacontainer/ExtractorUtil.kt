@@ -98,7 +98,7 @@ class ExtractorUtil {
     /**
      * 纯色占比是否过高
      */
-    private fun getImageColorPercentage(image: BufferedImage): Boolean {
+    fun getImageColorPercentage(image: BufferedImage): Boolean {
       val width = image.width
       val height = image.height
       val map = mutableMapOf<Int, Int>()

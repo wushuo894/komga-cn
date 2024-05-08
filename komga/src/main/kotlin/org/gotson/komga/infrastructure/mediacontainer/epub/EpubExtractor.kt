@@ -12,6 +12,7 @@ import org.gotson.komga.domain.model.R2Locator
 import org.gotson.komga.domain.model.TypedBytes
 import org.gotson.komga.infrastructure.image.ImageAnalyzer
 import org.gotson.komga.infrastructure.mediacontainer.ContentDetector
+import org.gotson.komga.infrastructure.mediacontainer.ExtractorUtil
 import org.jsoup.Jsoup
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -67,7 +68,7 @@ class EpubExtractor(
    * Retrieves the book cover along with its mediaType from the epub 2/3 manifest
    */
   fun getCover(path: Path): TypedBytes? {
-    val bytes = path.epub { (zip, opfDoc, opfDir, manifest) ->
+    path.epub { (zip, opfDoc, opfDir, manifest) ->
       try {
         val coverManifestItem =
           // EPUB 3 - try to get cover from manifest properties 'cover-image'
@@ -86,17 +87,15 @@ class EpubExtractor(
           mediaType = "image/"
         }
         val coverPath = URLDecoder.decode(normalizeHref(opfDir, href), "UTF-8")
-        TypedBytes(
-          zip.getInputStream(zip.getEntry(coverPath)).readAllBytes(),
-          mediaType,
-        )
-      } catch (e: Exception) {
-        generateCover(path.name)
+        val bufferedImage = zip.getInputStream(zip.getEntry(coverPath)).use { ImageIO.read(it) }
+        if (!ExtractorUtil.getImageColorPercentage(bufferedImage)) {
+          return TypedBytes(
+            zip.getInputStream(zip.getEntry(coverPath)).use { it.readAllBytes() },
+            mediaType,
+          )
+        }
+      } catch (_: Exception) {
       }
-    }
-
-    if (Objects.nonNull(bytes)) {
-      return bytes
     }
 
     // 先判断有没有 cover
@@ -107,28 +106,33 @@ class EpubExtractor(
       }
     for (entry in entries) {
       for (s in listOf("cover.jpg", "cover.png", "cover.jpeg")) {
-        if (entry.name.endsWith(s)) {
-          return TypedBytes(
-            zip.getInputStream(entry).readAllBytes(),
-            "image/",
-          )
+        if (!entry.name.endsWith(s)) {
+          continue
         }
+        val bufferedImage = zip.getInputStream(entry).use { ImageIO.read(it) }
+        if (ExtractorUtil.getImageColorPercentage(bufferedImage)) {
+          continue
+        }
+        return TypedBytes(
+          zip.getInputStream(entry).use { it.readAllBytes() },
+          "image/",
+        )
       }
     }
 
-    if (Objects.nonNull(entries.firstOrNull())) {
-      val inputStream = zip.getInputStream(entries.firstOrNull())
-      if (Objects.isNull(inputStream)) {
-        return generateCover(path.name)
-      }
-      // 没有找到 cover 直接使用第一个图片
-      return TypedBytes(
-        inputStream.readAllBytes(),
-        "image/",
-      )
+    if (Objects.isNull(entries.firstOrNull())) {
+      return generateCover(path.name)
     }
 
-    return generateCover(path.name)
+    val bufferedImage = zip.getInputStream(entries.firstOrNull()).use { ImageIO.read(it) }
+    if (ExtractorUtil.getImageColorPercentage(bufferedImage)) {
+      return generateCover(path.name)
+    }
+    // 没有找到 cover 直接使用第一个图片
+    return TypedBytes(
+      zip.getInputStream(entries.firstOrNull()).use { it.readAllBytes() },
+      "image/",
+    )
   }
 
   /**
