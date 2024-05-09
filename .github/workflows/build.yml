@@ -1,4 +1,4 @@
-name: Tests
+name: build
 
 on:
   workflow_dispatch:
@@ -59,3 +59,10 @@ jobs:
           file: ./komga/docker/Dockerfile.tpl
           push: true
           tags: wushuo894/komga-cn:latest
+      - name: DockerHub Description
+        uses: peter-evans/dockerhub-description@v4.0.0
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKERHUB_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          DOCKERHUB_REPOSITORY: wushuo894/komga-cn
+          README_FILEPATH: ./README.md
