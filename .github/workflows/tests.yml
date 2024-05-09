@@ -56,6 +56,6 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: ./komga
-          dockerfile: ./komga/docker/Dockerfile.tpl
+          file: ./komga/docker/Dockerfile.tpl
           push: true
           tags: wushuo894/komga-cn:latest
