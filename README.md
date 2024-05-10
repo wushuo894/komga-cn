@@ -8,6 +8,8 @@
 
 支持中文拼音首字母索引(需要使用本镜像建立 "库")
 
+支持繁体自动转换为简体
+
 github: https://github.com/wushuo894/komga-cn
 
 `docker run -d \
