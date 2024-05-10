@@ -5,5 +5,6 @@ VOLUME /tmp
 VOLUME /config
 ENV KOMGA_CONFIGDIR="/config"
 ENV TZ="Asia/Shanghai"
+ENV CHS="FALSE"
 EXPOSE 25600
 CMD ["java", "-jar", "komga-*.jar"]
