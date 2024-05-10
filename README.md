@@ -20,3 +20,16 @@ github: https://github.com/wushuo894/komga-cn
   -e TZ=Asia/Shanghai \
   --restart always \
   wushuo894/komga-cn`
+
+
+开启繁转简:
+
+`docker run -d \
+--name komga-cn \
+-v ./tmp:/tmp \
+-v ./config:/config \
+-p 25600:25600 \
+-e TZ=Asia/Shanghai \
+-e CHS=TRUE \
+--restart always \
+wushuo894/komga-cn`
