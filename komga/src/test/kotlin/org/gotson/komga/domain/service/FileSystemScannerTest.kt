@@ -119,6 +119,7 @@ class FileSystemScannerTest {
     scanCbz: Boolean,
     scanPdf: Boolean,
     scanEpub: Boolean,
+    scanMobi: Boolean,
     resultBookNames: List<String>,
   ) {
     Jimfs.newFileSystem(Configuration.unix()).use { fs ->
@@ -129,7 +130,7 @@ class FileSystemScannerTest {
       sourceFiles.forEach { Files.createFile(root.resolve(it)) }
 
       // when
-      val scan = scanner.scanRootFolder(root, scanCbx = scanCbz, scanPdf = scanPdf, scanEpub = scanEpub).series
+      val scan = scanner.scanRootFolder(root, scanCbx = scanCbz, scanPdf = scanPdf, scanEpub = scanEpub, scanMobi = scanMobi).series
 
       // then
       if (resultBookNames.isNotEmpty()) {

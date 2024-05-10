@@ -37,8 +37,8 @@ import org.springframework.context.ApplicationEventPublisher
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
-import org.springframework.web.util.UriUtils
 import java.io.File
+import java.net.URLDecoder
 import java.time.LocalDateTime
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.exists
@@ -68,6 +68,8 @@ class BookLifecycle(
   private val komgaSettingsProvider: KomgaSettingsProvider,
   @Qualifier("pdfImageType")
   private val pdfImageType: ImageType,
+  @Qualifier("mobiImageType")
+  private val mobiImageType: ImageType,
 ) {
   private val resizeTargetFormat = ImageType.JPEG
 
@@ -296,10 +298,11 @@ class BookLifecycle(
     val media = mediaRepository.findById(book.id)
     val pageContent = bookAnalyzer.getPageContent(BookWithMedia(book, media), number)
     val pageMediaType =
-      if (media.profile == MediaProfile.PDF)
-        pdfImageType.mediaType
-      else
-        media.pages[number - 1].mediaType
+      when (media.profile) {
+          MediaProfile.PDF -> pdfImageType.mediaType
+          MediaProfile.MOBI -> mobiImageType.mediaType
+          else -> media.pages[number - 1].mediaType
+      }
 
     if (resizeTo != null) {
       val convertedPage =
@@ -430,6 +433,7 @@ class BookLifecycle(
     val progress =
       when (media.profile!!) {
         MediaProfile.DIVINA,
+        MediaProfile.MOBI,
         MediaProfile.PDF,
         -> {
           require(newProgression.locator.locations?.position in 1..media.pageCount) { "Page argument (${newProgression.locator.locations?.position}) must be within 1 and book page count (${media.pageCount})" }
@@ -449,7 +453,7 @@ class BookLifecycle(
           val href =
             newProgression.locator.href
               .replaceAfter("#", "").removeSuffix("#")
-              .let { UriUtils.decode(it, Charsets.UTF_8) }
+              .let { URLDecoder.decode(it, Charsets.UTF_8) }
           require(href in media.files.map { it.fileName }) { "Resource does not exist in book: $href" }
           requireNotNull(newProgression.locator.locations?.progression) { "location.progression is required" }
 

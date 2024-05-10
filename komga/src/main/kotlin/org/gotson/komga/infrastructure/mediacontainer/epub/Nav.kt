@@ -3,14 +3,22 @@ package org.gotson.komga.infrastructure.mediacontainer.epub
 import org.gotson.komga.domain.model.EpubTocEntry
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
-import org.springframework.web.util.UriUtils
+import java.net.URLDecoder
 import java.nio.file.Path
+import java.util.Objects
 import kotlin.io.path.Path
 
 fun EpubPackage.getNavResource(): ResourceContent? =
   manifest.values.firstOrNull { it.properties.contains("nav") }?.let { nav ->
     val href = normalizeHref(opfDir, nav.href)
-    zip.getInputStream(zip.getEntry(href)).use { ResourceContent(Path(href), it.readBytes().decodeToString()) }
+    var inputStream = zip.getInputStream(zip.getEntry(href))
+    if (Objects.isNull(inputStream)) {
+      inputStream = zip.getInputStream(zip.getEntry(URLDecoder.decode(href, "UTF-8")))
+    }
+    if (Objects.isNull(inputStream)) {
+      return null
+    }
+    inputStream.use { ResourceContent(Path(href), it.readBytes().decodeToString()) }
   }
 
 fun processNav(
@@ -30,7 +38,7 @@ private fun navLiElementToTocEntry(
   navDir: Path?,
 ): EpubTocEntry? {
   val title = element.selectFirst(":root > a, span")?.text()
-  val href = element.selectFirst(":root > a")?.attr("href")?.let { UriUtils.decode(it, Charsets.UTF_8) }
+  val href = element.selectFirst(":root > a")?.attr("href")?.let { URLDecoder.decode(it, Charsets.UTF_8) }
   val children = element.select(":root > ol > li").mapNotNull { navLiElementToTocEntry(it, navDir) }
   if (title != null) return EpubTocEntry(title, href?.let { normalizeHref(navDir, it) }, children)
   return null

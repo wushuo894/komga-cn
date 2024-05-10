@@ -6,10 +6,14 @@ import org.apache.commons.compress.archivers.ArchiveEntry
 import org.apache.commons.compress.archivers.zip.ZipFile
 import org.gotson.komga.domain.model.MediaContainerEntry
 import org.gotson.komga.domain.model.MediaType
+import org.gotson.komga.domain.model.TypedBytes
 import org.gotson.komga.infrastructure.image.ImageAnalyzer
 import org.gotson.komga.infrastructure.mediacontainer.ContentDetector
+import org.gotson.komga.infrastructure.mediacontainer.ExtractorUtil
 import org.springframework.stereotype.Service
+import java.net.URLDecoder
 import java.nio.file.Path
+import java.util.Objects
 
 private val logger = KotlinLogging.logger {}
 
@@ -54,6 +58,33 @@ class ZipExtractor(
     entryName: String,
   ): ByteArray =
     ZipFile(path.toFile()).use { zip ->
-      zip.getInputStream(zip.getEntry(entryName)).use { it.readBytes() }
+      var inputStream = zip.getInputStream(zip.getEntry(entryName))
+      if (Objects.isNull(inputStream)) {
+        inputStream = zip.getInputStream(zip.getEntry(URLDecoder.decode(entryName, "UTF-8")))
+      }
+      inputStream.use { it.readBytes() }
     }
+
+  override fun getEntryStreamList(path: Path): List<ByteArray> {
+    ZipFile(path.toFile()).use { zip ->
+      return zip.entries.toList()
+        .filter { !it.isDirectory }
+        .map { entry ->
+          try {
+            zip.getInputStream(entry).use { it.readBytes() }
+          } catch (e: Exception) {
+            logger.warn(e) { "Could not analyze entry: ${entry.name}" }
+            ByteArray(0)
+          }
+        }.toList()
+    }
+  }
+
+  override fun getCover(path: Path): TypedBytes {
+    val byteArrays = getEntryStreamList(path)
+    return TypedBytes(
+      ExtractorUtil.getProportionCover(byteArrays) { byteArrays[0] },
+      MediaType.ZIP.type,
+    )
+  }
 }

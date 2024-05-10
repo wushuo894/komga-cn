@@ -13,6 +13,7 @@ data class BookDto(
   val seriesTitle: String,
   val libraryId: String,
   val name: String,
+  var namePinyin: String,
   val url: String,
   val number: Int,
   @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")

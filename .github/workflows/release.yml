@@ -121,16 +121,18 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: gradle/actions/setup-gradle@v3
-
       - name: Build
-        run: ./gradlew :komga:prepareThymeLeaf :komga:bootJar :komga-tray:jar
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          arguments: :komga:prepareThymeLeaf :komga:bootJar :komga-tray:jar
         env:
           NODE_OPTIONS: "--max-old-space-size=4096"
 
       - name: Generate OpenAPI docs
+        uses: gradle/actions/setup-gradle@v3
         if: needs.version.outputs.should_release #only redo if the version changed
-        run: ./gradlew :komga:generateOpenApiDocs
+        with:
+          arguments: :komga:generateOpenApiDocs
 
       - name: Create release notes
         run: |
@@ -141,8 +143,10 @@ jobs:
           echo ""
 
       - name: JReleaser Changelog append
+        uses: gradle/actions/setup-gradle@v3
         if: needs.version.outputs.should_release #only redo if the version changed
-        run: ./gradlew jreleaserChangelog
+        with:
+          arguments: jreleaserChangelog
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: JReleaser Changelog output
@@ -171,7 +175,7 @@ jobs:
           echo $APPLE_PRIVATE_KEY | base64 --decode > ./secret/apple_private_key.p8
 
       - name: Conveyor make copied-site
-        uses: hydraulic-software/conveyor/actions/build@v14.1
+        uses: hydraulic-software/conveyor/actions/build@v13.1
         if: inputs.conveyor-copied-site
         with:
           command: --cache-limit=2.0 -f conveyor.ci.conf make copied-site -o ./output/site
@@ -193,7 +197,9 @@ jobs:
 
       - name: JReleaser Release
         if: inputs.github_release
-        run: ./gradlew jreleaserRelease
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          arguments: jreleaserRelease
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: JReleaser Release output
@@ -207,7 +213,9 @@ jobs:
 
       - name: JReleaser Announce
         if: inputs.github_release
-        run: ./gradlew jreleaserAnnounce
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          arguments: jreleaserAnnounce
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: JReleaser Announce output
@@ -225,7 +233,9 @@ jobs:
 
       - name: JReleaser Publish
         if: inputs.docker_release
-        run: ./gradlew jreleaserPublish
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          arguments: jreleaserPublish
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: JReleaser Publish output
@@ -238,7 +248,7 @@ jobs:
             build/jreleaser/output.properties
 
       - name: Conveyor - publish to Microsoft Store
-        uses: hydraulic-software/conveyor/actions/build@v14.1
+        uses: hydraulic-software/conveyor/actions/build@v13.1
         if: inputs.msstore_release
         with:
           command: --cache-limit=2.0 -f conveyor.msstore.ci.conf make ms-store-release -o ./output/msstore

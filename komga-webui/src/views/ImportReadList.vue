@@ -112,7 +112,8 @@ import {
   ReadListCreationDto,
   ReadListDto,
   ReadListRequestBookMatchBookDto,
-  ReadListRequestMatchDto, ReadListRequestBookMatchSeriesDto,
+  ReadListRequestBookMatchSeriesDto,
+  ReadListRequestMatchDto,
 } from '@/types/komga-readlists'
 import ReadListMatchRow from '@/components/ReadListMatchRow.vue'
 import {ERROR, NOTIFICATION, NotificationEvent} from '@/types/events'

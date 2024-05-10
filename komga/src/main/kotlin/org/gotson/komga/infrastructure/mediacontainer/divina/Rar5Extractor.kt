@@ -1,12 +1,15 @@
 package org.gotson.komga.infrastructure.mediacontainer.divina
 
 import com.github.gotson.nightcompress.Archive
+import com.github.gotson.nightcompress.ArchiveEntry
 import io.github.oshai.kotlinlogging.KotlinLogging
 import net.greypanther.natsort.CaseInsensitiveSimpleNaturalComparator
 import org.gotson.komga.domain.model.MediaContainerEntry
 import org.gotson.komga.domain.model.MediaType
+import org.gotson.komga.domain.model.TypedBytes
 import org.gotson.komga.infrastructure.image.ImageAnalyzer
 import org.gotson.komga.infrastructure.mediacontainer.ContentDetector
+import org.gotson.komga.infrastructure.mediacontainer.ExtractorUtil
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory
 import org.springframework.beans.factory.support.BeanDefinitionBuilder
 import org.springframework.beans.factory.support.BeanDefinitionRegistry
@@ -72,4 +75,22 @@ class Rar5Extractor(
     entryName: String,
   ): ByteArray =
     Archive.getInputStream(path, entryName).use { it?.readBytes() ?: ByteArray(0) }
+
+  override fun getEntryStreamList(
+    path: Path,
+  ): List<ByteArray> {
+    return Archive(path).use { rar ->
+      generateSequence { rar.nextEntry }
+        .map { entity -> Archive.getInputStream(path, entity.name).use { it?.readBytes() ?: ByteArray(0) } }
+        .toList()
+    }
+  }
+
+  override fun getCover(path: Path): TypedBytes {
+    val byteArrays = getEntryStreamList(path)
+    return TypedBytes(
+      ExtractorUtil.getProportionCover(byteArrays) { byteArrays[0] },
+      MediaType.RAR_5.type,
+    )
+  }
 }

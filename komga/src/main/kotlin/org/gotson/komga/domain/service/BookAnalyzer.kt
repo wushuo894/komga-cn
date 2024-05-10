@@ -23,6 +23,7 @@ import org.gotson.komga.infrastructure.image.ImageType
 import org.gotson.komga.infrastructure.mediacontainer.ContentDetector
 import org.gotson.komga.infrastructure.mediacontainer.divina.DivinaExtractor
 import org.gotson.komga.infrastructure.mediacontainer.epub.EpubExtractor
+import org.gotson.komga.infrastructure.mediacontainer.mobi.MobiExtractor
 import org.gotson.komga.infrastructure.mediacontainer.pdf.PdfExtractor
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
@@ -40,6 +41,7 @@ class BookAnalyzer(
   private val contentDetector: ContentDetector,
   extractors: List<DivinaExtractor>,
   private val pdfExtractor: PdfExtractor,
+  private val mobiExtractor: MobiExtractor,
   private val epubExtractor: EpubExtractor,
   private val imageConverter: ImageConverter,
   private val imageAnalyzer: ImageAnalyzer,
@@ -50,6 +52,8 @@ class BookAnalyzer(
   private val thumbnailType: ImageType,
   @Qualifier("pdfImageType")
   private val pdfImageType: ImageType,
+  @Qualifier("mobiImageType")
+  private val mobiImageType: ImageType,
 ) {
   val divinaExtractors =
     extractors
@@ -80,6 +84,7 @@ class BookAnalyzer(
       when (mediaType.profile) {
         MediaProfile.DIVINA -> analyzeDivina(book, mediaType, analyzeDimensions)
         MediaProfile.PDF -> analyzePdf(book, analyzeDimensions)
+        MediaProfile.MOBI -> analyzeMobi(book, analyzeDimensions)
         MediaProfile.EPUB -> analyzeEpub(book, analyzeDimensions)
       }.copy(mediaType = mediaType.type)
     } catch (ade: AccessDeniedException) {
@@ -156,13 +161,13 @@ class BookAnalyzer(
       pageCount = manifest.pageCount,
       epubDivinaCompatible = manifest.divinaPages.isNotEmpty(),
       extension =
-        MediaExtensionEpub(
-          toc = manifest.toc,
-          landmarks = manifest.landmarks,
-          pageList = manifest.pageList,
-          isFixedLayout = manifest.isFixedLayout,
-          positions = manifest.positions,
-        ),
+      MediaExtensionEpub(
+        toc = manifest.toc,
+        landmarks = manifest.landmarks,
+        pageList = manifest.pageList,
+        isFixedLayout = manifest.isFixedLayout,
+        positions = manifest.positions,
+      ),
       comment = entriesErrorSummary,
     )
   }
@@ -172,6 +177,14 @@ class BookAnalyzer(
     analyzeDimensions: Boolean,
   ): Media {
     val pages = pdfExtractor.getPages(book.path, analyzeDimensions).map { BookPage(it.name, "", it.dimension) }
+    return Media(status = Media.Status.READY, pages = pages)
+  }
+
+  private fun analyzeMobi(
+    book: Book,
+    analyzeDimensions: Boolean,
+  ): Media {
+    val pages = mobiExtractor.getPages(book.path, analyzeDimensions).map { BookPage(it.name, "", it.dimension) }
     return Media(status = Media.Status.READY, pages = pages)
   }
 
@@ -204,15 +217,9 @@ class BookAnalyzer(
 
   fun getPoster(book: BookWithMedia): TypedBytes? =
     when (book.media.profile) {
-      MediaProfile.DIVINA ->
-        divinaExtractors[book.media.mediaType]?.getEntryStream(book.book.path, book.media.pages.first().fileName)?.let {
-          TypedBytes(
-            it,
-            book.media.pages.first().mediaType,
-          )
-        }
-
-      MediaProfile.PDF -> pdfExtractor.getPageContentAsImage(book.book.path, 1)
+      MediaProfile.DIVINA -> divinaExtractors[book.media.mediaType]?.getCover(book.book.path)
+      MediaProfile.MOBI -> mobiExtractor.getCover(book.book.path)
+      MediaProfile.PDF -> pdfExtractor.getCover(book.book.path)
       MediaProfile.EPUB -> epubExtractor.getCover(book.book.path)
       null -> null
     }
@@ -240,6 +247,7 @@ class BookAnalyzer(
     return when (book.media.profile) {
       MediaProfile.DIVINA -> divinaExtractors.getValue(book.media.mediaType!!).getEntryStream(book.book.path, book.media.pages[number - 1].fileName)
       MediaProfile.PDF -> pdfExtractor.getPageContentAsImage(book.book.path, number).bytes
+      MediaProfile.MOBI -> mobiExtractor.getPageContentAsImage(book.book.path, number).bytes
       MediaProfile.EPUB ->
         if (book.media.epubDivinaCompatible)
           epubExtractor.getEntryStream(book.book.path, book.media.pages[number - 1].fileName)
@@ -259,6 +267,11 @@ class BookAnalyzer(
     number: Int,
   ): TypedBytes {
     logger.debug { "Get raw page #$number for book: $book" }
+
+    if (book.media.profile == MediaProfile.MOBI) {
+      return mobiExtractor.getPageContentAsPdf(book.book.path, number)
+    }
+
     if (book.media.profile != MediaProfile.PDF) throw MediaUnsupportedException("Extractor does not support raw extraction of pages")
 
     if (book.media.status != Media.Status.READY) {
@@ -291,6 +304,7 @@ class BookAnalyzer(
     return when (book.media.profile) {
       MediaProfile.DIVINA -> divinaExtractors.getValue(book.media.mediaType!!).getEntryStream(book.book.path, fileName)
       MediaProfile.EPUB -> epubExtractor.getEntryStream(book.book.path, fileName)
+      MediaProfile.MOBI -> throw MediaUnsupportedException("Extractor does not support extraction of files")
       MediaProfile.PDF, null -> throw MediaUnsupportedException("Extractor does not support extraction of files")
     }
   }
@@ -337,6 +351,16 @@ class BookAnalyzer(
       }
 
     return hasher.computeHash(bytes.inputStream())
+  }
+
+  fun getMobiPagesDynamic(media: Media): List<BookPage> {
+    if (media.profile != MediaProfile.MOBI) throw MediaUnsupportedException("Cannot get synthetic pages for non-MOBI media")
+    return media.pages.map { page ->
+      page.copy(
+        mediaType = mobiImageType.mediaType,
+        dimension = page.dimension?.let { mobiExtractor.scaleDimension(it) },
+      )
+    }
   }
 
   fun getPdfPagesDynamic(media: Media): List<BookPage> {

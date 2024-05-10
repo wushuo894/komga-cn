@@ -10213,6 +10213,9 @@
           "scanEpub": {
             "type": "boolean"
           },
+          "scanMobi": {
+            "type": "boolean"
+          },
           "repairExtensions": {
             "type": "boolean"
           },
@@ -10802,6 +10805,7 @@
           "scanCbx",
           "scanDirectoryExclusions",
           "scanEpub",
+          "scanMobi",
           "scanForceModifiedTime",
           "scanInterval",
           "scanOnStartup",
@@ -10872,6 +10876,9 @@
           "scanEpub": {
             "type": "boolean"
           },
+          "scanMobi": {
+            "type": "boolean"
+          },
           "scanDirectoryExclusions": {
             "uniqueItems": true,
             "type": "array",
@@ -10935,6 +10942,7 @@
           "scanCbx",
           "scanDirectoryExclusions",
           "scanEpub",
+          "scanMobi",
           "scanForceModifiedTime",
           "scanInterval",
           "scanOnStartup",
@@ -11007,6 +11015,9 @@
             "type": "boolean"
           },
           "scanEpub": {
+            "type": "boolean"
+          },
+          "scanMobi": {
             "type": "boolean"
           },
           "scanDirectoryExclusions": {

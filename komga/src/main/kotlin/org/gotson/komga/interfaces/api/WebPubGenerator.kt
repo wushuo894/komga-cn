@@ -19,6 +19,7 @@ import org.gotson.komga.interfaces.api.dto.MEDIATYPE_WEBPUB_JSON_VALUE
 import org.gotson.komga.interfaces.api.dto.OpdsLinkRel
 import org.gotson.komga.interfaces.api.dto.PROFILE_DIVINA
 import org.gotson.komga.interfaces.api.dto.PROFILE_EPUB
+import org.gotson.komga.interfaces.api.dto.PROFILE_MOBI
 import org.gotson.komga.interfaces.api.dto.PROFILE_PDF
 import org.gotson.komga.interfaces.api.dto.WPBelongsToDto
 import org.gotson.komga.interfaces.api.dto.WPContributorDto
@@ -98,6 +99,28 @@ class WebPubGenerator(
                   emptyList(),
             )
           },
+        resources = buildThumbnailLinkDtos(bookDto.id),
+      )
+    }
+  }
+
+  fun toManifestMobi(
+    bookDto: BookDto,
+    media: Media,
+    seriesMetadata: SeriesMetadata,
+  ): WPPublicationDto {
+    val uriBuilder = ServletUriComponentsBuilder.fromCurrentContextPath().pathSegment("api", "v1")
+    return toBasePublicationDto(bookDto).let {
+      it.copy(
+        mediaType = MEDIATYPE_WEBPUB_JSON,
+        metadata = it.metadata.withSeriesMetadata(seriesMetadata).copy(conformsTo = PROFILE_MOBI),
+        readingOrder =
+        List(media.pageCount) { index: Int ->
+          WPLinkDto(
+            href = uriBuilder.cloneBuilder().path("books/${bookDto.id}/pages/${index + 1}/raw").toUriString(),
+            type = KomgaMediaType.MOBI.type,
+          )
+        },
         resources = buildThumbnailLinkDtos(bookDto.id),
       )
     }
@@ -262,6 +285,7 @@ class WebPubGenerator(
       MediaProfile.DIVINA -> MEDIATYPE_DIVINA_JSON_VALUE
       MediaProfile.PDF -> MEDIATYPE_WEBPUB_JSON_VALUE
       MediaProfile.EPUB -> MEDIATYPE_WEBPUB_JSON_VALUE
+      MediaProfile.MOBI -> MEDIATYPE_WEBPUB_JSON_VALUE
       null -> MEDIATYPE_WEBPUB_JSON_VALUE
     }
 

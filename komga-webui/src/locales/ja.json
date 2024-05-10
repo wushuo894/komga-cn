@@ -235,6 +235,7 @@
     "pages_n": "0 ページ | 1 ページ | {count} ページ",
     "password": "パスワード",
     "pdf": "PDF",
+    "mobi": "Mobi",
     "pending_tasks": "保留中のタスクなし | 1タスク保留中 | {count} タスク保留中",
     "publisher": "出版社",
     "read": "読む",

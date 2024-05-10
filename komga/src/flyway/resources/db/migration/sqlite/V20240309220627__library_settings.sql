@@ -1,0 +1,3 @@
+ALTER TABLE LIBRARY
+    add column SCAN_MOBI boolean NOT NULL DEFAULT 1;
+

@@ -1,9 +1,17 @@
-
 import nu.studer.gradle.jooq.JooqGenerate
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.flywaydb.gradle.task.FlywayMigrateTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jetbrains.kotlin.util.prefixIfNot
+
+repositories {
+  maven {
+    url = uri("https://maven.aliyun.com/repository/public/")
+  }
+  maven {
+    url = uri("https://raw.github.com/rrauschenbach/mobi-api4java/mvn-repo/")
+  }
+}
 
 plugins {
   kotlin("jvm")
@@ -70,6 +78,7 @@ dependencies {
   implementation("commons-io:commons-io:2.15.1")
   implementation("org.apache.commons:commons-lang3:3.14.0")
   implementation("commons-validator:commons-validator:1.8.0")
+  implementation("com.hankcs:hanlp:portable-1.8.4")
 
   run {
     val luceneVersion = "9.9.1"
@@ -90,6 +99,7 @@ dependencies {
   implementation("org.apache.pdfbox:pdfbox:3.0.1")
   implementation("net.grey-panther:natural-comparator:1.1")
   implementation("org.jsoup:jsoup:1.17.2")
+  implementation("cn.hutool:hutool-all:5.8.27")
 
   implementation("net.coobird:thumbnailator:0.4.20")
   runtimeOnly("com.twelvemonkeys.imageio:imageio-jpeg:3.10.1")
@@ -113,6 +123,8 @@ dependencies {
 
   implementation("org.xerial:sqlite-jdbc:3.45.0.0")
   jooqGenerator("org.xerial:sqlite-jdbc:3.45.0.0")
+
+  implementation("org.rr:mobi-api4java:0.0.2-SNAPSHOT")
 
   if (version.toString().endsWith(".0.0")) {
     ksp("com.github.gotson.bestbefore:bestbefore-processor-kotlin:0.1.0")
