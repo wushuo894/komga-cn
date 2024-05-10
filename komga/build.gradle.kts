@@ -1,4 +1,3 @@
-
 import nu.studer.gradle.jooq.JooqGenerate
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.flywaydb.gradle.task.FlywayMigrateTask
@@ -79,6 +78,7 @@ dependencies {
   implementation("commons-io:commons-io:2.15.1")
   implementation("org.apache.commons:commons-lang3:3.14.0")
   implementation("commons-validator:commons-validator:1.8.0")
+  implementation("com.hankcs:hanlp:portable-1.8.4")
 
   run {
     val luceneVersion = "9.9.1"
@@ -86,7 +86,6 @@ dependencies {
     implementation("org.apache.lucene:lucene-analysis-common:$luceneVersion")
     implementation("org.apache.lucene:lucene-queryparser:$luceneVersion")
     implementation("org.apache.lucene:lucene-backward-codecs:$luceneVersion")
-    implementation("io.github.biezhi:TinyPinyin:2.0.3.RELEASE")
   }
 
   implementation("com.ibm.icu:icu4j:74.2")

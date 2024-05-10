@@ -1,6 +1,6 @@
 package org.gotson.komga.domain.service
 
-import com.github.promeg.pinyinhelper.Pinyin
+import com.hankcs.hanlp.HanLP
 import io.github.oshai.kotlinlogging.KotlinLogging
 import net.greypanther.natsort.CaseInsensitiveSimpleNaturalComparator
 import org.gotson.komga.application.tasks.TaskEmitter
@@ -152,7 +152,7 @@ class SeriesLifecycle(
   fun createSeries(series: Series): Series {
     transactionTemplate.executeWithoutResult {
       seriesRepository.insert(series)
-      val titleSort = if (series.name.matches(Regex("^\\w"))) series.name else Pinyin.toPinyin(series.name, "UTF-8")
+      val titleSort = if (series.name.matches(Regex("^\\w"))) series.name else HanLP.convertToPinyinString(series.name, "", false)
       seriesMetadataRepository.insert(
         SeriesMetadata(
           title = series.name,

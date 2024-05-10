@@ -4,8 +4,8 @@ import cn.hutool.core.img.FontUtil
 import cn.hutool.core.io.FileUtil
 import cn.hutool.core.io.IoUtil
 import cn.hutool.core.io.file.FileNameUtil
-import cn.hutool.core.io.resource.ResourceUtil
 import cn.hutool.extra.spring.SpringUtil
+import com.hankcs.hanlp.HanLP
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.apache.commons.compress.archivers.ArchiveEntry
 import org.apache.commons.compress.archivers.zip.ZipFile
@@ -20,8 +20,6 @@ import org.gotson.komga.infrastructure.mediacontainer.ContentDetector
 import org.gotson.komga.infrastructure.mediacontainer.ExtractorUtil
 import org.jsoup.Jsoup
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.web.WebProperties.Resources
-import org.springframework.core.io.ResourceLoader
 import org.springframework.stereotype.Service
 import java.awt.Color
 import java.awt.Font
@@ -56,7 +54,7 @@ class EpubExtractor(
     entryName: String,
   ): ByteArray =
     ZipFile(path.toFile()).use { zip ->
-      val bytes: ByteArray?
+      var bytes: ByteArray
       try {
         var entry = zip.getEntry(entryName)
         var inputStream = zip.getInputStream(entry)
@@ -65,6 +63,12 @@ class EpubExtractor(
           inputStream = zip.getInputStream(entry)
         }
         bytes = inputStream.use { it.readAllBytes() }
+
+        // 转换为简体
+        val chs = System.getenv().getOrDefault("CHS", "FALSE")
+        if ("TRUE" == chs.trim().uppercase()) {
+          bytes = HanLP.convertToSimplifiedChinese(String(bytes, Charsets.UTF_8)).toByteArray(Charsets.UTF_8)
+        }
       } catch (e: Exception) {
         throw EntryNotFoundException("Entry does not exist: $entryName")
       }
