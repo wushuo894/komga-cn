@@ -4,6 +4,7 @@ import cn.hutool.core.img.FontUtil
 import cn.hutool.core.io.FileUtil
 import cn.hutool.core.io.IoUtil
 import cn.hutool.core.io.file.FileNameUtil
+import cn.hutool.core.util.StrUtil
 import cn.hutool.extra.spring.SpringUtil
 import com.hankcs.hanlp.HanLP
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -63,6 +64,16 @@ class EpubExtractor(
           inputStream = zip.getInputStream(entry)
         }
         bytes = inputStream.use { it.readAllBytes() }
+
+        val extName = FileUtil.extName(entryName)
+
+        if (StrUtil.isBlank(extName)) {
+          return bytes
+        }
+
+        if (!listOf("html", "txt").contains(extName)) {
+          return bytes
+        }
 
         // 转换为简体
         val chs = System.getenv().getOrDefault("CHS", "FALSE")
