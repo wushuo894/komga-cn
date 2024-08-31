@@ -1,7 +1,11 @@
 package org.gotson.komga.infrastructure.util
 
+import cn.hutool.core.io.FileUtil
+import cn.hutool.core.util.StrUtil
+import com.hankcs.hanlp.HanLP
 import org.apache.commons.compress.archivers.zip.ZipFile
 import org.gotson.komga.domain.model.EntryNotFoundException
+import java.net.URLDecoder
 import java.nio.file.Path
 
 inline fun <R> ZipFile.Builder.use(block: (ZipFile) -> R) = this.get().use(block)
@@ -16,8 +20,29 @@ fun getZipEntryBytes(
       .setPath(path)
       .setUseUnicodeExtraFields(true)
       .setIgnoreLocalFileHeader(true)
-  val bytes = zipBuilder.use { it.getEntryBytes(entryName) }
-  if (bytes != null) return bytes
+  var bytes = zipBuilder.use { it.getEntryBytes(entryName) }
+  if (bytes == null) {
+    bytes = zipBuilder.use { it.getEntryBytes(URLDecoder.decode(entryName, "UTF-8")) }
+  }
+  if (bytes != null) {
+    val extName = FileUtil.extName(entryName)
+
+    if (StrUtil.isBlank(extName)) {
+      return bytes
+    }
+
+    if (!listOf("html", "txt").contains(extName)) {
+      return bytes
+    }
+
+    // 转换为简体
+    val chs = System.getenv().getOrDefault("CHS", "FALSE")
+    if ("TRUE" == chs.trim().uppercase()) {
+      bytes = HanLP.convertToSimplifiedChinese(String(bytes, Charsets.UTF_8)).toByteArray(Charsets.UTF_8)
+    }
+    return bytes
+  }
+
 
   // slow path. Entry with that name wasn't in central directory record
   // Iterate each entry and, if present, set name from Unicode extra field in local file header

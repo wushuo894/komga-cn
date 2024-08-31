@@ -59,14 +59,6 @@ class ZipExtractor(
     path: Path,
     entryName: String,
   ): ByteArray = getZipEntryBytes(path, entryName)
-//  ): ByteArray =
-//    ZipFile(path.toFile()).use { zip ->
-//      var inputStream = zip.getInputStream(zip.getEntry(entryName))
-//      if (Objects.isNull(inputStream)) {
-//        inputStream = zip.getInputStream(zip.getEntry(URLDecoder.decode(entryName, "UTF-8")))
-//      }
-//      inputStream.use { it.readBytes() }
-//    }
 
   override fun getEntryStreamList(path: Path): List<ByteArray> {
     ZipFile(path.toFile()).use { zip ->
