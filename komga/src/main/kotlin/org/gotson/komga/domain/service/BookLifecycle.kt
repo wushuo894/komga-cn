@@ -390,10 +390,23 @@ class BookLifecycle(
     user: KomgaUser,
     page: Int,
   ) {
-    val pages = mediaRepository.getPagesSize(book.id)
-    require(page in 1..pages) { "Page argument ($page) must be within 1 and book page count ($pages)" }
+    val media = mediaRepository.findById(book.id)
+    require(page in 1..media.pageCount) { "Page argument ($page) must be within 1 and book page count (${media.pageCount})" }
 
-    val progress = ReadProgress(book.id, user.id, page, page == pages)
+    val locator =
+      if (media.profile == MediaProfile.EPUB) {
+        require(media.epubDivinaCompatible) { "epub book is not Divina compatible" }
+
+        val extension =
+          mediaRepository.findExtensionByIdOrNull(book.id) as? MediaExtensionEpub
+            ?: throw IllegalArgumentException("Epub extension not found")
+        extension.positions[page - 1]
+      } else {
+        null
+      }
+
+    val progress = ReadProgress(book.id, user.id, page, page == media.pageCount, locator = locator)
+
     readProgressRepository.save(progress)
     eventPublisher.publishEvent(DomainEvent.ReadProgressChanged(progress))
   }
@@ -463,15 +476,18 @@ class BookLifecycle(
           // match progression with positions
           val matchingPositions = extension.positions.filter { it.href == href }
           val matchedPosition =
-            matchingPositions.firstOrNull { it.locations!!.progression == newProgression.locator.locations!!.progression }
-              ?: run {
-                // no exact match
-                val before = matchingPositions.filter { it.locations!!.progression!! < newProgression.locator.locations!!.progression!! }.maxByOrNull { it.locations!!.position!! }
-                val after = matchingPositions.filter { it.locations!!.progression!! > newProgression.locator.locations!!.progression!! }.minByOrNull { it.locations!!.position!! }
-                if (before == null || after == null || before.locations!!.position!! > after.locations!!.position!!)
-                  throw IllegalArgumentException("Invalid progression")
-                before
-              }
+            if (extension.isFixedLayout && matchingPositions.size == 1)
+              matchingPositions.first()
+            else
+              matchingPositions.firstOrNull { it.locations!!.progression == newProgression.locator.locations!!.progression }
+                ?: run {
+                  // no exact match
+                  val before = matchingPositions.filter { it.locations!!.progression!! < newProgression.locator.locations!!.progression!! }.maxByOrNull { it.locations!!.position!! }
+                  val after = matchingPositions.filter { it.locations!!.progression!! > newProgression.locator.locations!!.progression!! }.minByOrNull { it.locations!!.position!! }
+                  if (before == null || after == null || before.locations!!.position!! > after.locations!!.position!!)
+                    throw IllegalArgumentException("Invalid progression")
+                  before
+                }
 
           val totalProgression = matchedPosition.locations?.totalProgression
           ReadProgress(
@@ -482,7 +498,8 @@ class BookLifecycle(
             newProgression.modified.toLocalDateTime().toCurrentTimeZone(),
             newProgression.device.id,
             newProgression.device.name,
-            newProgression.locator,
+            // use the type we have instead of the one provided
+            newProgression.locator.copy(type = matchedPosition.type),
           )
         }
       }

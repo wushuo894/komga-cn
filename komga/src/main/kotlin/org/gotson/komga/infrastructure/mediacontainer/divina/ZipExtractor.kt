@@ -9,6 +9,8 @@ import org.gotson.komga.domain.model.MediaType
 import org.gotson.komga.domain.model.TypedBytes
 import org.gotson.komga.infrastructure.image.ImageAnalyzer
 import org.gotson.komga.infrastructure.mediacontainer.ContentDetector
+import org.gotson.komga.infrastructure.util.getZipEntryBytes
+import org.gotson.komga.infrastructure.util.use
 import org.gotson.komga.infrastructure.mediacontainer.ExtractorUtil
 import org.springframework.stereotype.Service
 import java.net.URLDecoder
@@ -30,7 +32,7 @@ class ZipExtractor(
     path: Path,
     analyzeDimensions: Boolean,
   ): List<MediaContainerEntry> =
-    ZipFile(path.toFile()).use { zip ->
+    ZipFile.builder().setPath(path).use { zip ->
       zip.entries.toList()
         .filter { !it.isDirectory }
         .map { entry ->
@@ -56,14 +58,15 @@ class ZipExtractor(
   override fun getEntryStream(
     path: Path,
     entryName: String,
-  ): ByteArray =
-    ZipFile(path.toFile()).use { zip ->
-      var inputStream = zip.getInputStream(zip.getEntry(entryName))
-      if (Objects.isNull(inputStream)) {
-        inputStream = zip.getInputStream(zip.getEntry(URLDecoder.decode(entryName, "UTF-8")))
-      }
-      inputStream.use { it.readBytes() }
-    }
+  ): ByteArray = getZipEntryBytes(path, entryName)
+//  ): ByteArray =
+//    ZipFile(path.toFile()).use { zip ->
+//      var inputStream = zip.getInputStream(zip.getEntry(entryName))
+//      if (Objects.isNull(inputStream)) {
+//        inputStream = zip.getInputStream(zip.getEntry(URLDecoder.decode(entryName, "UTF-8")))
+//      }
+//      inputStream.use { it.readBytes() }
+//    }
 
   override fun getEntryStreamList(path: Path): List<ByteArray> {
     ZipFile(path.toFile()).use { zip ->

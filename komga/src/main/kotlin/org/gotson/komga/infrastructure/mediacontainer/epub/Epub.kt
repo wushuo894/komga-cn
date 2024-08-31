@@ -2,6 +2,7 @@ package org.gotson.komga.infrastructure.mediacontainer.epub
 
 import org.apache.commons.compress.archivers.zip.ZipFile
 import org.gotson.komga.domain.model.MediaUnsupportedException
+import org.gotson.komga.infrastructure.util.use
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.parser.Parser
@@ -18,7 +19,7 @@ data class EpubPackage(
 )
 
 inline fun <R> Path.epub(block: (EpubPackage) -> R): R =
-  ZipFile(this.toFile()).use { zip ->
+  ZipFile.builder().setPath(this).use { zip ->
     val opfFile = zip.getPackagePath()
     var inputStream = zip.getInputStream(zip.getEntry(opfFile))
     if (Objects.isNull(inputStream)) {
@@ -36,7 +37,7 @@ fun ZipFile.getPackagePath(): String =
   }
 
 fun getPackageFile(path: Path): String? =
-  ZipFile(path.toFile()).use { zip ->
+  ZipFile.builder().setPath(path).use { zip ->
     try {
       var inputStream = zip.getInputStream(zip.getEntry(zip.getPackagePath()))
       if (Objects.isNull(inputStream)) {

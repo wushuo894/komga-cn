@@ -1,3 +1,114 @@
+# [1.12.0](https://github.com/gotson/komga/compare/1.11.3...1.12.0) (2024-08-29)
+## 🚀 Features
+**kobo**
+- initial Kobo Sync support ([210c7b1](https://github.com/gotson/komga/commits/210c7b1))
+- add API key support ([a4747e8](https://github.com/gotson/komga/commits/a4747e8))
+
+**metadata**
+- use group-position for epub series index ([4354581](https://github.com/gotson/komga/commits/4354581))
+
+**webui**
+- api key support ([c1e1da6](https://github.com/gotson/komga/commits/c1e1da6))
+
+## 🐛 Fixes
+**api**
+- incorrect query param name ([85a9934](https://github.com/gotson/komga/commits/85a9934)), closes [#1670](https://github.com/gotson/komga/issues/1670)
+- properly handle simple read progress for divina compatible epub ([0d19aa1](https://github.com/gotson/komga/commits/0d19aa1))
+
+## 🛠  Build
+
+- ignore conveyor steps on forks ([cefd527](https://github.com/gotson/komga/commits/cefd527))
+
+## 🌐 Translation
+**komga-tray**
+- translated using Weblate (Hungarian) ([95df315](https://github.com/gotson/komga/commits/95df315))
+
+## ⚙️ Dependencies
+**ci**
+- bump actions/checkout from 3 to 4 ([14887f5](https://github.com/gotson/komga/commits/14887f5))
+
+**webui**
+- bump webpack from 5.88.2 to 5.94.0 in /komga-webui ([f3bce23](https://github.com/gotson/komga/commits/f3bce23))
+
+# [1.11.3](https://github.com/gotson/komga/compare/1.11.2...1.11.3) (2024-08-26)
+## 🐛 Fixes
+**api**
+- some metrics are not updated ([da35140](https://github.com/gotson/komga/commits/da35140)), closes [#1643](https://github.com/gotson/komga/issues/1643)
+- known page hash cannot be sorted by file size ([bf71f8e](https://github.com/gotson/komga/commits/bf71f8e)), closes [#1610](https://github.com/gotson/komga/issues/1610)
+
+**docker**
+- broken Dockerfile ([796a4ed](https://github.com/gotson/komga/commits/796a4ed))
+
+**komga-tray**
+- libheif.dll had no avif support ([f743aae](https://github.com/gotson/komga/commits/f743aae)), closes [#1624](https://github.com/gotson/komga/issues/1624)
+
+**webui**
+- footer text displayed over book content ([6794e24](https://github.com/gotson/komga/commits/6794e24)), closes [#1489](https://github.com/gotson/komga/issues/1489)
+- auto-scroll upward does not work when dragging elements ([835bff4](https://github.com/gotson/komga/commits/835bff4)), closes [#1652](https://github.com/gotson/komga/issues/1652)
+
+## 🏎 Perf
+
+- faster zip entry extraction ([eeb5898](https://github.com/gotson/komga/commits/eeb5898))
+
+## 🔄️ Changes
+
+- better logging for sqlite pools ([6a51f34](https://github.com/gotson/komga/commits/6a51f34))
+
+## 🛠  Build
+**webui**
+- update Browserslist db ([eec2474](https://github.com/gotson/komga/commits/eec2474))
+
+**unscoped**
+- add browserlist update action ([b93459a](https://github.com/gotson/komga/commits/b93459a))
+
+## ⚙️ Dependencies
+**ci**
+- bump gradle/actions from 3 to 4 ([6482b34](https://github.com/gotson/komga/commits/6482b34))
+
+**webui**
+- bump axios from 1.6.0 to 1.7.4 in /komga-webui ([f177fab](https://github.com/gotson/komga/commits/f177fab))
+
+# [1.11.2](https://github.com/gotson/komga/compare/1.11.1...1.11.2) (2024-07-25)
+## 🐛 Fixes
+**docker**
+- native libraries would not load on aarch64 ([16e8b97](https://github.com/gotson/komga/commits/16e8b97))
+
+**unscoped**
+- do not share IndexWriterConfig instances across IndexWriters ([90db07c](https://github.com/gotson/komga/commits/90db07c)), closes [#1603](https://github.com/gotson/komga/issues/1603)
+
+## 🔄️ Changes
+
+- replace task executor type with interface ([19b846b](https://github.com/gotson/komga/commits/19b846b))
+
+## 🛠  Build
+**benchmark**
+- fix properties following gradle change ([1236594](https://github.com/gotson/komga/commits/1236594))
+
+## 🌐 Translation
+**komga-tray**
+- added translation using Weblate (Chinese (Simplified)) ([c66db8e](https://github.com/gotson/komga/commits/c66db8e))
+- translated using Weblate (Swedish) ([5e7c42c](https://github.com/gotson/komga/commits/5e7c42c))
+- added translation using Weblate (Croatian) ([d9a8cc6](https://github.com/gotson/komga/commits/d9a8cc6))
+- translated using Weblate (Czech) ([57bbe5e](https://github.com/gotson/komga/commits/57bbe5e))
+
+**webui**
+- translated using Weblate (Chinese (Simplified)) ([5d4fc14](https://github.com/gotson/komga/commits/5d4fc14))
+- translated using Weblate (Korean) ([8182d50](https://github.com/gotson/komga/commits/8182d50))
+- translated using Weblate (Hungarian) ([a844587](https://github.com/gotson/komga/commits/a844587))
+- translated using Weblate (Croatian) ([0ddb3d8](https://github.com/gotson/komga/commits/0ddb3d8))
+- translated using Weblate (Czech) ([c4a428f](https://github.com/gotson/komga/commits/c4a428f))
+- translated using Weblate (Russian) ([a9eadae](https://github.com/gotson/komga/commits/a9eadae))
+- translated using Weblate (German) ([7ea825d](https://github.com/gotson/komga/commits/7ea825d))
+- translated using Weblate (Thai) ([3da499e](https://github.com/gotson/komga/commits/3da499e))
+
+## ⚙️ Dependencies
+**ci**
+- bump hydraulic-software/conveyor from 14.2 to 14.3 ([4d8b7d4](https://github.com/gotson/komga/commits/4d8b7d4))
+- bump hydraulic-software/conveyor from 14.1 to 14.2 ([d7ee49c](https://github.com/gotson/komga/commits/d7ee49c))
+
+**webui**
+- bump braces from 3.0.2 to 3.0.3 in /komga-webui ([fbc7ce1](https://github.com/gotson/komga/commits/fbc7ce1))
+
 # [1.11.1](https://github.com/gotson/komga/compare/1.11.0...1.11.1) (2024-04-24)
 ## 🐛 Fixes
 **api**

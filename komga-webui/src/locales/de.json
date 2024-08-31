@@ -310,11 +310,7 @@
       "dialog_title": "Benutzer hinzufügen",
       "field_email": "E-Mail",
       "field_email_error": "Die E-Mail-Adresse muss eine gültige Adresse sein",
-      "field_password": "Passwort",
-      "field_role_administrator": "Systemverwalter",
-      "field_role_file_download": "Datei-Herunterladen",
-      "field_role_page_streaming": "Seitenaufbau",
-      "label_roles": "Rollen"
+      "field_password": "Passwort"
     },
     "analyze_library": {
       "body": "Analysiert alle Mediendateien in der Bibliothek. Bei der Analyse werden Informationen über die Medien erfasst. Je nach Größe Ihrer Bibliothek kann dies sehr lange dauern.",
@@ -882,7 +878,7 @@
     "no_results": "Die Suche lieferte keine Treffer",
     "search": "Suche",
     "search_for_something_else": "Versuche ein anderes Suchkriterium",
-    "search_results_for": "Suchergegnis für „{name}“"
+    "search_results_for": "Suchergebnis für „{name}“"
   },
   "searchbox": {
     "in_library": "in {library}",
