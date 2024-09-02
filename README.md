@@ -1,5 +1,9 @@
 # ![app icon](https://github.com/gotson/komga/raw/master/.github/readme-images/app-icon.png) Komga
 
+[![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/wushuo894/komga-cn?color=blue&label=download&sort=semver)](https://github.com/wushuo894/komga-cn/releases/latest)
+[![GitHub all releases](https://img.shields.io/github/downloads/wushuo894/komga-cn/total?color=blue&label=github%20downloads)](https://github.com/wushuo894/komga-cn/releases)
+[![Docker Pulls](https://img.shields.io/docker/pulls/wushuo894/komga-cn)](https://hub.docker.com/r/wushuo894/komga-cn)
+
 在原版基础上对 MOBI 格式的漫画 做了支持
 
 修复了中文 EPUB 问题
