@@ -44,26 +44,7 @@ class PdfExtractor(
    * 获取封面
    */
   fun getCover(path: Path): TypedBytes? {
-    val pdf = Loader.loadPDF(path.toFile())
-    val numberOfPages = pdf.numberOfPages
-    val byteArrays = mutableListOf<ByteArray>()
-
-    for (i in 0 until numberOfPages) {
-      val page = pdf.getPage(i)
-
-      val image = PDFRenderer(pdf).renderImage(i - 1, page.getScale(), RGB)
-      val bytes =
-        ByteArrayOutputStream().use { out ->
-          ImageIO.write(image, imageType.imageIOFormat, out)
-          out.toByteArray()
-        }
-      byteArrays.add(bytes)
-    }
-
-    return TypedBytes(
-      ExtractorUtil.getProportionCover(byteArrays) { byteArrays[0] },
-      MediaType.MOBI.type,
-    )
+    return getPageContentAsImage(path, 1)
   }
 
   fun getPageContentAsImage(

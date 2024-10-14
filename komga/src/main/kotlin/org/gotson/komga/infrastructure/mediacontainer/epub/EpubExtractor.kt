@@ -16,9 +16,8 @@ import org.gotson.komga.domain.model.TypedBytes
 import org.gotson.komga.infrastructure.image.ImageAnalyzer
 import org.gotson.komga.infrastructure.kobo.KepubConverter
 import org.gotson.komga.infrastructure.mediacontainer.ContentDetector
-import org.gotson.komga.infrastructure.util.getEntryBytes
-import org.gotson.komga.infrastructure.util.getEntryInputStream
 import org.gotson.komga.infrastructure.mediacontainer.ExtractorUtil
+import org.gotson.komga.infrastructure.util.getEntryInputStream
 import org.gotson.komga.infrastructure.util.getZipEntryBytes
 import org.jsoup.Jsoup
 import org.jsoup.parser.Parser
@@ -38,8 +37,8 @@ import javax.imageio.ImageIO
 import kotlin.io.path.Path
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.invariantSeparatorsPathString
-import kotlin.math.absoluteValue
 import kotlin.io.path.name
+import kotlin.math.absoluteValue
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
