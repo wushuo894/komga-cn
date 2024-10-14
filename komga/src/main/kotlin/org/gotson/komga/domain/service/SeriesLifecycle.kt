@@ -152,7 +152,7 @@ class SeriesLifecycle(
   fun createSeries(series: Series): Series {
     transactionTemplate.executeWithoutResult {
       seriesRepository.insert(series)
-      val titleSort = if (series.name.matches(Regex("^\\w"))) series.name else HanLP.convertToPinyinString(series.name, "", false)
+      val titleSort = HanLP.convertToPinyinString(series.name, "", false)
       seriesMetadataRepository.insert(
         SeriesMetadata(
           title = series.name,

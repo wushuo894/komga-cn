@@ -1,5 +1,6 @@
 package org.gotson.komga.domain.model
 
+import com.hankcs.hanlp.HanLP
 import org.gotson.komga.language.lowerNotBlank
 import java.time.LocalDateTime
 
@@ -81,7 +82,7 @@ class SeriesMetadata(
     SeriesMetadata(
       status = status,
       title = title,
-      titleSort = titleSort,
+      titleSort = HanLP.convertToPinyinString(title, "", false),
       summary = summary,
       readingDirection = readingDirection,
       publisher = publisher,
