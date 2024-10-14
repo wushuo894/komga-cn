@@ -160,6 +160,7 @@ class BookAnalyzer(
       files = manifest.resources,
       pageCount = manifest.pageCount,
       epubDivinaCompatible = manifest.divinaPages.isNotEmpty(),
+      epubIsKepub = manifest.isKepub,
       extension =
       MediaExtensionEpub(
         toc = manifest.toc,

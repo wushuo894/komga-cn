@@ -9,6 +9,8 @@ data class SettingsDto(
   val serverPort: SettingMultiSource<Int?>,
   val serverContextPath: SettingMultiSource<String?>,
   val koboProxy: Boolean,
+  val koboPort: Int?,
+  val kepubifyPath: SettingMultiSource<String?>,
 )
 
 data class SettingMultiSource<T>(

@@ -1,6 +1,7 @@
 package org.gotson.komga.infrastructure.mediacontainer.epub
 
 import org.gotson.komga.domain.model.EpubTocEntry
+import org.gotson.komga.infrastructure.util.getEntryBytes
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import java.net.URLDecoder
