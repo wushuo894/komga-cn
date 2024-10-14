@@ -1,7 +1,6 @@
 package org.gotson.komga.infrastructure.configuration
 
 import org.apache.commons.lang3.RandomStringUtils
-import org.gotson.komga.application.tasks.TaskPoolSizeChangedEvent
 import org.gotson.komga.domain.model.ThumbnailSize
 import org.gotson.komga.infrastructure.jooq.main.ServerSettingsDao
 import org.springframework.context.ApplicationEventPublisher
@@ -63,7 +62,7 @@ class KomgaSettingsProvider(
     set(value) {
       serverSettingsDao.saveSetting(Settings.TASK_POOL_SIZE.name, value)
       field = value
-      eventPublisher.publishEvent(TaskPoolSizeChangedEvent())
+      eventPublisher.publishEvent(SettingChangedEvent.TaskPoolSize)
     }
 
   var serverPort: Int? =
@@ -92,6 +91,27 @@ class KomgaSettingsProvider(
       serverSettingsDao.saveSetting(Settings.KOBO_PROXY.name, value)
       field = value
     }
+
+  var koboPort: Int? =
+    serverSettingsDao.getSettingByKey(Settings.KOBO_PORT.name, Int::class.java)
+    set(value) {
+      if (value != null)
+        serverSettingsDao.saveSetting(Settings.KOBO_PORT.name, value)
+      else
+        serverSettingsDao.deleteSetting(Settings.KOBO_PORT.name)
+      field = value
+    }
+
+  var kepubifyPath: String? =
+    serverSettingsDao.getSettingByKey(Settings.KEPUBIFY_PATH.name, String::class.java)?.ifBlank { null }
+    set(value) {
+      if (value != null)
+        serverSettingsDao.saveSetting(Settings.KEPUBIFY_PATH.name, value)
+      else
+        serverSettingsDao.deleteSetting(Settings.KEPUBIFY_PATH.name)
+      field = value
+      eventPublisher.publishEvent(SettingChangedEvent.KepubifyPath)
+    }
 }
 
 private enum class Settings {
@@ -104,4 +124,6 @@ private enum class Settings {
   SERVER_PORT,
   SERVER_CONTEXT_PATH,
   KOBO_PROXY,
+  KOBO_PORT,
+  KEPUBIFY_PATH,
 }

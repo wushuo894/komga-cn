@@ -1,3 +1,122 @@
+# [1.14.0](https://github.com/gotson/komga/compare/1.13.0...1.14.0) (2024-09-27)
+## 🚀 Features
+**docker**
+- bundle kepubify ([1d1e3fd](https://github.com/gotson/komga/commits/1d1e3fd))
+
+**kobo**
+- update changed covers on Kobo ([870afff](https://github.com/gotson/komga/commits/870afff))
+- handle read progression conversion between kepub and epub ([df11920](https://github.com/gotson/komga/commits/df11920))
+- convert books to kepub on the fly using kepubify ([dd39f28](https://github.com/gotson/komga/commits/dd39f28))
+- provide KEPUB format download url if book is kepub ([9e8a525](https://github.com/gotson/komga/commits/9e8a525))
+
+**komga-tray**
+- bundle kepubify for windows and macos apps ([489d4b1](https://github.com/gotson/komga/commits/489d4b1))
+
+**webui**
+- support kepubify path in Server Settings ([d838c85](https://github.com/gotson/komga/commits/d838c85))
+- display KEPUB as book format for kepub files ([12e2436](https://github.com/gotson/komga/commits/12e2436))
+
+**unscoped**
+- detect if epub is a kepub ([0fd783c](https://github.com/gotson/komga/commits/0fd783c))
+
+## 🐛 Fixes
+
+- don't crash if ForwardedHeaderFilter is not defined ([2b18dfa](https://github.com/gotson/komga/commits/2b18dfa))
+
+## 🔄️ Changes
+
+- simplify epub zip functions ([d0143bf](https://github.com/gotson/komga/commits/d0143bf))
+- move TaskPoolSize event to infrastructure package ([734bf8f](https://github.com/gotson/komga/commits/734bf8f))
+
+## 📝 Documentation
+**openapi**
+- split OPDS v1 and v2 ([ca57ab3](https://github.com/gotson/komga/commits/ca57ab3))
+
+## 🌐 Translation
+**komga-tray**
+- translated using Weblate (Danish) ([a253bce](https://github.com/gotson/komga/commits/a253bce))
+- translated using Weblate (Portuguese) ([5494254](https://github.com/gotson/komga/commits/5494254))
+
+**webui**
+- translated using Weblate (Chinese (Simplified Han script)) ([b549038](https://github.com/gotson/komga/commits/b549038))
+- translated using Weblate (Spanish) ([f7d1fe4](https://github.com/gotson/komga/commits/f7d1fe4))
+- translated using Weblate (Danish) ([5c5aabb](https://github.com/gotson/komga/commits/5c5aabb))
+- translated using Weblate (Chinese (Simplified Han script)) ([51cd7e0](https://github.com/gotson/komga/commits/51cd7e0))
+- translated using Weblate (Finnish) ([cc55e2f](https://github.com/gotson/komga/commits/cc55e2f))
+- translated using Weblate (French) ([14bbdc4](https://github.com/gotson/komga/commits/14bbdc4))
+- translated using Weblate (Spanish) ([fdf0582](https://github.com/gotson/komga/commits/fdf0582))
+- translated using Weblate (Croatian) ([9c49f65](https://github.com/gotson/komga/commits/9c49f65))
+- translated using Weblate (Portuguese) ([7e29dc6](https://github.com/gotson/komga/commits/7e29dc6))
+- translated using Weblate (German) ([ebeea18](https://github.com/gotson/komga/commits/ebeea18))
+- translated using Weblate (Turkish) ([e1c2395](https://github.com/gotson/komga/commits/e1c2395))
+
+## ⚙️ Dependencies
+**komga**
+- bump sqlite-jdbc from 3.45.0.0 to 3.46.1.3 ([b9cb0fe](https://github.com/gotson/komga/commits/b9cb0fe))
+
+**webui**
+- bump serve-static and express in /komga-webui ([b64c117](https://github.com/gotson/komga/commits/b64c117))
+
+# [1.13.0](https://github.com/gotson/komga/compare/1.12.1...1.13.0) (2024-09-11)
+## 🚀 Features
+**kobo**
+- sync On Deck as a Kobo collection ([f07be06](https://github.com/gotson/komga/commits/f07be06))
+
+**metadata**
+- support multiple values in Web field from ComicInfo.xml ([d12f3b3](https://github.com/gotson/komga/commits/d12f3b3)), closes [#1639](https://github.com/gotson/komga/issues/1639)
+
+**webui**
+- add sort criteria for known page hash ([be4911d](https://github.com/gotson/komga/commits/be4911d)), closes [#1609](https://github.com/gotson/komga/issues/1609)
+
+## 🐛 Fixes
+
+- admin user created by claiming does not have kobo sync role ([bf8bbdd](https://github.com/gotson/komga/commits/bf8bbdd)), closes [#1686](https://github.com/gotson/komga/issues/1686)
+
+## 🏎 Perf
+**api**
+- make on deck much faster ([e72ff78](https://github.com/gotson/komga/commits/e72ff78))
+
+## 🛠  Build
+**benchmark**
+- mark some books as read for on deck ([0047a91](https://github.com/gotson/komga/commits/0047a91))
+
+## 🌐 Translation
+**komga-tray**
+- translated using Weblate (Croatian) ([b8f2cea](https://github.com/gotson/komga/commits/b8f2cea))
+
+**webui**
+- translated using Weblate (Chinese (Simplified Han script)) ([bc913ad](https://github.com/gotson/komga/commits/bc913ad))
+- translated using Weblate (Korean) ([41c93fd](https://github.com/gotson/komga/commits/41c93fd))
+- translated using Weblate (Finnish) ([026c696](https://github.com/gotson/komga/commits/026c696))
+- translated using Weblate (French) ([c725d73](https://github.com/gotson/komga/commits/c725d73))
+- translated using Weblate (Spanish) ([ffc7bc3](https://github.com/gotson/komga/commits/ffc7bc3))
+- translated using Weblate (Croatian) ([15eb9a4](https://github.com/gotson/komga/commits/15eb9a4))
+- translated using Weblate (Russian) ([8249e0f](https://github.com/gotson/komga/commits/8249e0f))
+
+# [1.12.1](https://github.com/gotson/komga/compare/1.12.0...1.12.1) (2024-09-04)
+## 🐛 Fixes
+**kobo**
+- better handling of missing port from Kobo Sync requests ([4cd838a](https://github.com/gotson/komga/commits/4cd838a))
+- use the total progression sent by Kobo ([be37127](https://github.com/gotson/komga/commits/be37127))
+- correctly propagate metadata update during kobo sync ([20e7c29](https://github.com/gotson/komga/commits/20e7c29))
+- properly store total progression on state update ([fcde9c9](https://github.com/gotson/komga/commits/fcde9c9))
+- properly mark book as read when finished on Kobo ([c3fc37a](https://github.com/gotson/komga/commits/c3fc37a))
+
+**webui**
+- only show API key copy button if clipboard is available ([4351086](https://github.com/gotson/komga/commits/4351086)), closes [#1675](https://github.com/gotson/komga/issues/1675)
+
+## 🔄️ Changes
+
+- adjust loglevel for LoginListener ([2c260b1](https://github.com/gotson/komga/commits/2c260b1))
+
+## 🛠  Build
+**webui**
+- update Browserslist db ([63e1c0c](https://github.com/gotson/komga/commits/63e1c0c))
+
+## 📝 Documentation
+
+- add kobo sync in readme ([02e8d30](https://github.com/gotson/komga/commits/02e8d30))
+
 # [1.12.0](https://github.com/gotson/komga/compare/1.11.3...1.12.0) (2024-08-29)
 ## 🚀 Features
 **kobo**

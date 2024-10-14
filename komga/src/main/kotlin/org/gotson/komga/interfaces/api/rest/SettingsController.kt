@@ -3,6 +3,7 @@ package org.gotson.komga.interfaces.api.rest
 import jakarta.validation.Valid
 import org.gotson.komga.domain.model.ROLE_ADMIN
 import org.gotson.komga.infrastructure.configuration.KomgaSettingsProvider
+import org.gotson.komga.infrastructure.kobo.KepubConverter
 import org.gotson.komga.infrastructure.web.WebServerEffectiveSettings
 import org.gotson.komga.interfaces.api.rest.dto.SettingMultiSource
 import org.gotson.komga.interfaces.api.rest.dto.SettingsDto
@@ -29,6 +30,7 @@ class SettingsController(
   @Value("\${server.port:#{null}}") private val configServerPort: Int?,
   @Value("\${server.servlet.context-path:#{null}}") private val configServerContextPath: String?,
   private val serverSettings: WebServerEffectiveSettings,
+  private val kepubConverter: KepubConverter,
 ) {
   @GetMapping
   fun getSettings(): SettingsDto =
@@ -41,6 +43,8 @@ class SettingsController(
       SettingMultiSource(configServerPort, komgaSettingsProvider.serverPort, serverSettings.effectiveServerPort),
       SettingMultiSource(configServerContextPath, komgaSettingsProvider.serverContextPath, serverSettings.effectiveServletContextPath),
       komgaSettingsProvider.koboProxy,
+      komgaSettingsProvider.koboPort,
+      SettingMultiSource(kepubConverter.kepubifyConfigurationPath, komgaSettingsProvider.kepubifyPath, kepubConverter.kepubifyPath?.toString()),
     )
 
   @PatchMapping
@@ -60,5 +64,7 @@ class SettingsController(
     if (newSettings.isSet("serverContextPath")) komgaSettingsProvider.serverContextPath = newSettings.serverContextPath
 
     newSettings.koboProxy?.let { komgaSettingsProvider.koboProxy = it }
+    if (newSettings.isSet("koboPort")) komgaSettingsProvider.koboPort = newSettings.koboPort
+    if (newSettings.isSet("kepubifyPath")) komgaSettingsProvider.kepubifyPath = newSettings.kepubifyPath
   }
 }

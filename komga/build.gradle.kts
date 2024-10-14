@@ -121,8 +121,8 @@ dependencies {
 
   implementation("com.github.ben-manes.caffeine:caffeine")
 
-  implementation("org.xerial:sqlite-jdbc:3.45.0.0")
-  jooqGenerator("org.xerial:sqlite-jdbc:3.45.0.0")
+  implementation("org.xerial:sqlite-jdbc:3.46.1.3")
+  jooqGenerator("org.xerial:sqlite-jdbc:3.46.1.3")
 
   implementation("org.rr:mobi-api4java:0.0.2-SNAPSHOT")
 
