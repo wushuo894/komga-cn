@@ -1,5 +1,14 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+repositories {
+  maven {
+    url = uri("https://raw.github.com/wushuo894/mobi-api4java/mvn-repo/")
+  }
+  maven {
+    url = uri("https://maven.aliyun.com/repository/public/")
+  }
+}
+
 plugins {
   run {
     kotlin("jvm")

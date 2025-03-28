@@ -81,6 +81,7 @@ class LibraryContentLifecycle(
             library.scanCbx,
             library.scanPdf,
             library.scanEpub,
+            library.scanMobi,
             library.scanDirectoryExclusions,
           )
         } catch (e: DirectoryNotFoundException) {

@@ -52,7 +52,7 @@ class BookConverter(
   private val convertibleTypes = listOf(MediaType.RAR_4.type, MediaType.RAR_5.type)
 
   private val mediaTypeToExtension =
-    listOf(MediaType.RAR_4, MediaType.RAR_5, MediaType.ZIP, MediaType.PDF, MediaType.EPUB)
+    listOf(MediaType.RAR_4, MediaType.RAR_5, MediaType.ZIP, MediaType.PDF, MediaType.EPUB, MediaType.MOBI)
       .associate { it.type to it.fileExtension }
 
   private val failedConversions = mutableListOf<String>()
@@ -127,20 +127,20 @@ class BookConverter(
     try {
       when {
         convertedMedia.status != Media.Status.READY
-        -> throw BookConversionException("Converted file could not be analyzed, aborting conversion")
+          -> throw BookConversionException("Converted file could not be analyzed, aborting conversion")
 
         convertedMedia.mediaType != MediaType.ZIP.type
-        -> throw BookConversionException("Converted file is not a zip file, aborting conversion")
+          -> throw BookConversionException("Converted file is not a zip file, aborting conversion")
 
         !convertedMedia.pages
           .map { FilenameUtils.getName(it.fileName) to it.mediaType }
           .containsAll(media.pages.map { FilenameUtils.getName(it.fileName) to it.mediaType })
-        -> throw BookConversionException("Converted file does not contain all pages from existing file, aborting conversion")
+          -> throw BookConversionException("Converted file does not contain all pages from existing file, aborting conversion")
 
         !convertedMedia.files
           .map { FilenameUtils.getName(it.fileName) }
           .containsAll(media.files.map { FilenameUtils.getName(it.fileName) })
-        -> throw BookConversionException("Converted file does not contain all files from existing file, aborting conversion")
+          -> throw BookConversionException("Converted file does not contain all files from existing file, aborting conversion")
       }
     } catch (e: BookConversionException) {
       destinationPath.deleteIfExists()

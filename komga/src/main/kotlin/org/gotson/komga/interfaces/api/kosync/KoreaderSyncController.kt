@@ -2,7 +2,10 @@ package org.gotson.komga.interfaces.api.kosync
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.gotson.komga.domain.model.MediaExtensionEpub
-import org.gotson.komga.domain.model.MediaProfile
+import org.gotson.komga.domain.model.MediaProfile.DIVINA
+import org.gotson.komga.domain.model.MediaProfile.EPUB
+import org.gotson.komga.domain.model.MediaProfile.MOBI
+import org.gotson.komga.domain.model.MediaProfile.PDF
 import org.gotson.komga.domain.model.R2Device
 import org.gotson.komga.domain.model.R2Locator
 import org.gotson.komga.domain.model.R2Progression
@@ -70,8 +73,8 @@ class KoreaderSyncController(
 
     val progress =
       when (media.profile) {
-        MediaProfile.DIVINA, MediaProfile.PDF -> readProgress.page.toString()
-        MediaProfile.EPUB -> {
+        DIVINA, PDF -> readProgress.page.toString()
+        EPUB -> {
           val extension = mediaRepository.findExtensionByIdOrNull(book.id) as? MediaExtensionEpub ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Epub extension not found")
 
           // convert the href to its index for KOReader
@@ -84,6 +87,8 @@ class KoreaderSyncController(
           // return a progress string that points to the beginning of the resource
           "/body/DocFragment[${resourceIndex + 1}].0"
         }
+
+        MOBI -> readProgress.page.toString()
         null -> throw ResponseStatusException(HttpStatus.NOT_FOUND, "Book has no media profile")
       }
 
@@ -111,7 +116,7 @@ class KoreaderSyncController(
     // convert the KOReader update request to an R2Progression
     val locator =
       when (media.profile) {
-        MediaProfile.DIVINA, MediaProfile.PDF ->
+        DIVINA, MOBI, PDF ->
           R2Locator(
             href = "",
             type = "",
@@ -122,7 +127,7 @@ class KoreaderSyncController(
               ),
           )
 
-        MediaProfile.EPUB -> {
+        EPUB -> {
           val resourceIndex =
             // we try to parse the progress using the 2 possible formats
             resourceRegex1

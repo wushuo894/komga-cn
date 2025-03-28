@@ -1,5 +1,8 @@
 package org.gotson.komga.infrastructure.mediacontainer.epub
 
+import cn.hutool.core.io.FileUtil
+import cn.hutool.core.util.StrUtil
+import com.hankcs.hanlp.HanLP
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.apache.commons.compress.archivers.ArchiveEntry
 import org.gotson.komga.domain.model.BookPage
@@ -70,12 +73,32 @@ class EpubExtractor(
         val href = coverManifestItem.href
         val mediaType = coverManifestItem.mediaType
         val coverPath = normalizeHref(opfDir, href)
-        zip.getEntryBytes(coverPath)?.let { coverBytes ->
+        val typedBytes = zip.getEntryBytes(coverPath)?.let { coverBytes ->
           TypedBytes(
             coverBytes,
             mediaType,
           )
         }
+        if (typedBytes == null) {
+          return null
+        }
+
+        val extName = FileUtil.extName(coverPath)
+        if (StrUtil.isBlank(extName)) {
+          return typedBytes
+        }
+
+        if (!listOf("html", "txt").contains(extName)) {
+          return typedBytes
+        }
+
+        // 转换为简体
+        val chs = System.getenv().getOrDefault("CHS", "FALSE")
+        if ("TRUE" == chs.trim().uppercase()) {
+          val s = String(typedBytes.bytes, Charsets.UTF_8)
+          typedBytes.bytes = HanLP.convertToSimplifiedChinese(s).toByteArray(Charsets.UTF_8)
+        }
+        return typedBytes
       } else {
         null
       }
@@ -238,7 +261,7 @@ class EpubExtractor(
               kepubConverter
                 .convertEpubToKepubWithoutChecks(path)
                 ?.also { it.toFile().deleteOnExit() }
-                // if the conversion failed, throw an exception that will be caught in the catch block
+              // if the conversion failed, throw an exception that will be caught in the catch block
                 ?: throw IllegalStateException()
             val positions = computePositionsFromKoboSpan(readingOrder) { filename -> getZipEntryBytes(kepub, filename).decodeToString() }
             kepub.deleteIfExists()

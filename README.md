@@ -1,56 +1,51 @@
-[![Open Collective backers and sponsors](https://img.shields.io/opencollective/all/komga?label=OpenCollective%20Sponsors&color=success)](https://opencollective.com/komga) [![GitHub Sponsors](https://img.shields.io/github/sponsors/gotson?label=Github%20Sponsors&color=success)](https://github.com/sponsors/gotson)
-[![Discord](https://img.shields.io/discord/678794935368941569?label=Discord&color=blue)](https://discord.gg/TdRpkDu)
+# ![app icon](https://github.com/gotson/komga/raw/master/.github/readme-images/app-icon.png) Komga
 
-[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/gotson/komga/tests.yml?branch=master)](https://github.com/gotson/komga/actions?query=workflow%3ATests+branch%3Amaster)
-[![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/gotson/komga?color=blue&label=download&sort=semver)](https://github.com/gotson/komga/releases) [![GitHub all releases](https://img.shields.io/github/downloads/gotson/komga/total?color=blue&label=github%20downloads)](https://github.com/gotson/komga/releases)
-[![Docker Pulls](https://img.shields.io/docker/pulls/gotson/komga)](https://hub.docker.com/r/gotson/komga)
+[![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/wushuo894/komga-cn?color=blue&label=download&sort=semver)](https://github.com/wushuo894/komga-cn/releases/latest)
+[![GitHub all releases](https://img.shields.io/github/downloads/wushuo894/komga-cn/total?color=blue&label=github%20downloads)](https://github.com/wushuo894/komga-cn/releases)
+[![Docker Pulls](https://img.shields.io/docker/pulls/wushuo894/komga-cn)](https://hub.docker.com/r/wushuo894/komga-cn)
 
-[![Translation status](https://hosted.weblate.org/widgets/komga/-/webui/svg-badge.svg)](https://hosted.weblate.org/engage/komga/)
+在原版基础上对 MOBI 格式的漫画 做了支持
 
-# ![app icon](./.github/readme-images/app-icon.png) Komga
+修复了中文 EPUB 问题
 
-Komga is a media server for your comics, mangas, BDs, magazines and eBooks.
+增强封面获取逻辑
 
-#### Chat on [Discord](https://discord.gg/TdRpkDu)
+支持中文拼音首字母索引(需要使用本镜像建立 "库")
 
-## Features
+支持繁体自动转换为简体
 
-- Browse libraries, series and books via a responsive web UI that works on desktop, tablets and phones
-- Organize your library with collections and read lists
-- Edit metadata for your series and books
-- Import embedded metadata automatically
-- Webreader with multiple reading modes
-- Manage multiple users, with per-library access control, age restrictions, and labels restrictions
-- Offers a REST API, many community tools and scripts can interact with Komga
-- OPDS v1 and v2 support
-- Kobo Sync with your Kobo eReader
-- KOReader Sync
-- Download book files, whole series, or read lists
-- Duplicate files detection
-- Duplicate pages detection and removal
-- Import books from outside your libraries directly into your series folder
-- Import ComicRack `cbl` read lists
+github: https://github.com/wushuo894/komga-cn
 
-## Installation
+## docker run
 
-Refer to the [website](https://komga.org/docs/category/installation) for instructions.
+```
+docker run -d \
+    --name komga-cn \
+    -v ./config:/config \
+    -m 8192m \
+    -p 25600:25600  \
+    -e TZ=Asia/Shanghai \
+    -e CHS=TRUE \
+    --restart always \
+    wushuo894/komga-cn:latest
+```
 
-## Documentation
+## docker compose
 
-Head over to our [website](https://komga.org) for more information.
-
-## Develop in Komga
-
-Check the [development guidelines](./DEVELOPING.md).
-
-## Translation
-
-[![Translation status](https://hosted.weblate.org/widgets/komga/-/webui/horizontal-auto.svg)](https://hosted.weblate.org/engage/komga/)
-
-## Sponsors
-
-[![Jetbrains_logo](./.github/readme-images/jetbrains.svg)](https://www.jetbrains.com/?from=Komga)
-
-## Credits
-
-The Komga icon is based on an icon made by [Freepik](https://www.freepik.com/home) from www.flaticon.com
+```
+version: "3"
+services:
+  komga-cn:
+    image: wushuo894/komga-cn:latest
+    container_name: komga-cn
+    network_mode: bridge
+    mem_limit: 8192m
+    ports:
+      - "25600:25600" # web端口
+    environment:
+      - TZ=Asia/Shanghai
+      - CHS=TRUE # 开启繁转简
+    volumes:
+      - ./config:/config # 配置文件存放位置
+    restart: always
+```

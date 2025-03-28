@@ -1,5 +1,6 @@
 package org.gotson.komga.domain.service
 
+import com.hankcs.hanlp.HanLP
 import io.github.oshai.kotlinlogging.KotlinLogging
 import net.greypanther.natsort.CaseInsensitiveSimpleNaturalComparator
 import org.gotson.komga.application.tasks.TaskEmitter
@@ -152,10 +153,12 @@ class SeriesLifecycle(
     transactionTemplate.executeWithoutResult {
       seriesRepository.insert(series)
 
+      val titleSort = if (series.name.matches(Regex("^\\w"))) series.name else HanLP.convertToPinyinString(series.name, "", false)
+
       seriesMetadataRepository.insert(
         SeriesMetadata(
           title = series.name,
-          titleSort = series.name.stripAccents(),
+          titleSort = titleSort.stripAccents(),
           seriesId = series.id,
         ),
       )
@@ -372,6 +375,7 @@ class SeriesLifecycle(
         logger.info { "More than one thumbnail is selected, removing extra ones" }
         thumbnailsSeriesRepository.markSelected(selected[0])
       }
+
       selected.isEmpty() && all.isNotEmpty() -> {
         logger.info { "Series has no selected thumbnail, choosing one automatically" }
         thumbnailsSeriesRepository.markSelected(all.first())

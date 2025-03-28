@@ -94,6 +94,7 @@ class LibraryDao(
       .set(l.SCAN_CBX, library.scanCbx)
       .set(l.SCAN_PDF, library.scanPdf)
       .set(l.SCAN_EPUB, library.scanEpub)
+      .set(l.SCAN_MOBI, library.scanMobi)
       .set(l.SCAN_STARTUP, library.scanOnStartup)
       .set(l.SCAN_INTERVAL, library.scanInterval.toString())
       .set(l.REPAIR_EXTENSIONS, library.repairExtensions)

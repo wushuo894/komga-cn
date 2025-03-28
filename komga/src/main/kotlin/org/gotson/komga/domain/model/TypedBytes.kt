@@ -1,6 +1,6 @@
 package org.gotson.komga.domain.model
 
 class TypedBytes(
-  val bytes: ByteArray,
+  var bytes: ByteArray,
   val mediaType: String,
 )

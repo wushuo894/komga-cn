@@ -520,6 +520,9 @@ export default Vue.extend({
       }, {
         text: this.$t('common.epub').toString(),
         value: 'epub',
+      }, {
+        text: 'Mobi',
+        value: 'mobi',
       }]
     },
 
@@ -630,19 +633,20 @@ export default Vue.extend({
       this.form.scanInterval = library ? library.scanInterval : ScanIntervalDto.EVERY_6H
       this.form.scanOnStartup = library ? library.scanOnStartup : false
       this.form.scanTypes = []
-      if (!library) this.form.scanTypes = ['cbx', 'pdf', 'epub']
+      if (!library) this.form.scanTypes = ['cbx', 'pdf', 'epub', 'mobi']
       if (library?.scanEpub == true) this.form.scanTypes.splice(0, 0, 'epub')
       if (library?.scanPdf == true) this.form.scanTypes.splice(0, 0, 'pdf')
       if (library?.scanCbx == true) this.form.scanTypes.splice(0, 0, 'cbx')
+      if (library?.scanMobi == true) this.form.scanTypes.splice(0, 0, 'mobi')
       this.form.scanDirectoryExclusions = library ? library.scanDirectoryExclusions : ['#recycle', '@eaDir', '@Recycle']
       this.form.repairExtensions = library ? library.repairExtensions : false
       this.form.convertToCbz = library ? library.convertToCbz : false
       this.form.emptyTrashAfterScan = library ? library.emptyTrashAfterScan : false
       this.form.seriesCover = library ? library.seriesCover : SeriesCoverDto.FIRST
-      this.form.hashFiles = library ? library.hashFiles : true
+      this.form.hashFiles = library ? library.hashFiles : false
       this.form.hashPages = library ? library.hashPages : false
       this.form.hashKoreader = library ? library.hashKoreader : false
-      this.form.analyzeDimensions = library ? library.analyzeDimensions : true
+      this.form.analyzeDimensions = library ? library.analyzeDimensions : false
       this.form.oneshotsDirectory = library ? library.oneshotsDirectory : ''
       this.$v.$reset()
     },
@@ -669,6 +673,7 @@ export default Vue.extend({
           scanCbx: this.form.scanTypes.includes('cbx'),
           scanPdf: this.form.scanTypes.includes('pdf'),
           scanEpub: this.form.scanTypes.includes('epub'),
+          scanMobi: this.form.scanTypes.includes('mobi'),
           scanDirectoryExclusions: this.form.scanDirectoryExclusions,
           repairExtensions: this.form.repairExtensions,
           convertToCbz: this.form.convertToCbz,

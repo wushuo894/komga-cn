@@ -20,6 +20,7 @@ export interface LibraryDto {
   scanCbx: boolean,
   scanPdf: boolean,
   scanEpub: boolean,
+  scanMobi: boolean,
   scanDirectoryExclusions: string[],
   repairExtensions: boolean,
   convertToCbz: boolean,

@@ -13,6 +13,10 @@ import org.gotson.komga.domain.model.ImageConversionException
 import org.gotson.komga.domain.model.Media
 import org.gotson.komga.domain.model.MediaNotReadyException
 import org.gotson.komga.domain.model.MediaProfile
+import org.gotson.komga.domain.model.MediaProfile.DIVINA
+import org.gotson.komga.domain.model.MediaProfile.EPUB
+import org.gotson.komga.domain.model.MediaProfile.MOBI
+import org.gotson.komga.domain.model.MediaProfile.PDF
 import org.gotson.komga.domain.model.MediaUnsupportedException
 import org.gotson.komga.domain.model.R2Progression
 import org.gotson.komga.domain.model.toR2Progression
@@ -80,19 +84,35 @@ class CommonBookController(
         .fromMediaType(media.mediaType)
         ?.profile
     ) {
-      MediaProfile.DIVINA -> getWebPubManifestDivinaInternal(principal, bookId, webPubGenerator)
-      MediaProfile.PDF -> getWebPubManifestPdfInternal(principal, bookId, webPubGenerator)
-      MediaProfile.EPUB -> getWebPubManifestEpubInternal(principal, bookId, webPubGenerator)
+      DIVINA -> getWebPubManifestDivinaInternal(principal, bookId, webPubGenerator)
+      PDF -> getWebPubManifestPdfInternal(principal, bookId, webPubGenerator)
+      EPUB -> getWebPubManifestEpubInternal(principal, bookId, webPubGenerator)
+      MOBI -> getWebPubManifestMobiInternal(principal, bookId, webPubGenerator)
       null -> throw ResponseStatusException(HttpStatus.NOT_FOUND, "Book analysis failed")
     }
   } ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
+
+  fun getWebPubManifestMobiInternal(
+    principal: KomgaPrincipal,
+    bookId: String,
+    webPubGenerator: WebPubGenerator,
+  ) =
+    bookDtoRepository.findByIdOrNull(bookId, principal.user.id)?.let { bookDto ->
+      if (bookDto.media.mediaProfile != MediaProfile.MOBI.name) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Book media type '${bookDto.media.mediaType}' not compatible with requested profile")
+      contentRestrictionChecker.checkContentRestriction(principal.user, bookDto)
+      webPubGenerator.toManifestMobi(
+        bookDto,
+        mediaRepository.findById(bookDto.id),
+        seriesMetadataRepository.findById(bookDto.seriesId),
+      )
+    } ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
 
   fun getWebPubManifestEpubInternal(
     principal: KomgaPrincipal,
     bookId: String,
     webPubGenerator: WebPubGenerator,
   ) = bookDtoRepository.findByIdOrNull(bookId, principal.user.id)?.let { bookDto ->
-    if (bookDto.media.mediaProfile != MediaProfile.EPUB.name) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Book media type '${bookDto.media.mediaType}' not compatible with requested profile")
+    if (bookDto.media.mediaProfile != EPUB.name) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Book media type '${bookDto.media.mediaType}' not compatible with requested profile")
     contentRestrictionChecker.checkContentRestriction(principal.user, bookDto)
     webPubGenerator.toManifestEpub(
       bookDto,
@@ -106,7 +126,7 @@ class CommonBookController(
     bookId: String,
     webPubGenerator: WebPubGenerator,
   ) = bookDtoRepository.findByIdOrNull(bookId, principal.user.id)?.let { bookDto ->
-    if (bookDto.media.mediaProfile != MediaProfile.PDF.name) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Book media type '${bookDto.media.mediaType}' not compatible with requested profile")
+    if (bookDto.media.mediaProfile != PDF.name) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Book media type '${bookDto.media.mediaType}' not compatible with requested profile")
     contentRestrictionChecker.checkContentRestriction(principal.user, bookDto)
     webPubGenerator.toManifestPdf(
       bookDto,
@@ -146,7 +166,7 @@ class CommonBookController(
 
     contentRestrictionChecker.checkContentRestriction(principal.user, book)
 
-    if (media.profile == MediaProfile.PDF && acceptHeaders != null && acceptHeaders.any { it.isCompatibleWith(MediaType.APPLICATION_PDF) }) {
+    if (media.profile == PDF && acceptHeaders != null && acceptHeaders.any { it.isCompatibleWith(MediaType.APPLICATION_PDF) }) {
       // keep only pdf and image
       acceptHeaders.removeIf { !it.isCompatibleWith(MediaType.APPLICATION_PDF) && !it.isCompatibleWith(MediaType("image")) }
       MimeTypeUtils.sortBySpecificity(acceptHeaders)
@@ -285,7 +305,7 @@ class CommonBookController(
         .body(ByteArray(0))
     }
 
-    if (media.profile != MediaProfile.EPUB) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Book media type '${media.mediaType}' not compatible with requested profile")
+    if (media.profile != EPUB) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Book media type '${media.mediaType}' not compatible with requested profile")
     if (!isFont) contentRestrictionChecker.checkContentRestriction(principal!!.user, book)
 
     val res = media.files.firstOrNull { it.fileName == resourceName } ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)

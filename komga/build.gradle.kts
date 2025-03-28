@@ -4,6 +4,15 @@ import org.flywaydb.gradle.task.FlywayMigrateTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jetbrains.kotlin.util.prefixIfNot
 
+repositories {
+  maven {
+    url = uri("https://raw.github.com/wushuo894/mobi-api4java/mvn-repo/")
+  }
+  maven {
+    url = uri("https://maven.aliyun.com/repository/public/")
+  }
+}
+
 plugins {
   kotlin("jvm")
   kotlin("plugin.spring")
@@ -40,6 +49,11 @@ dependencies {
   api(platform("org.springframework.boot:spring-boot-dependencies:3.4.0"))
 
   api("org.springframework.boot:spring-boot-starter-web")
+
+  implementation("cn.hutool:hutool-all:5.8.27")
+  implementation("com.hankcs:hanlp:portable-1.8.4")
+  implementation("org.rr:mobi-api4java:0.0.2-SNAPSHOT")
+
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-validation")
   implementation("org.springframework.boot:spring-boot-starter-actuator")

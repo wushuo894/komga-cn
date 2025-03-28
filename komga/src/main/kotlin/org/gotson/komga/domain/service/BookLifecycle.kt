@@ -13,6 +13,10 @@ import org.gotson.komga.domain.model.Media
 import org.gotson.komga.domain.model.MediaExtensionEpub
 import org.gotson.komga.domain.model.MediaNotReadyException
 import org.gotson.komga.domain.model.MediaProfile
+import org.gotson.komga.domain.model.MediaProfile.DIVINA
+import org.gotson.komga.domain.model.MediaProfile.EPUB
+import org.gotson.komga.domain.model.MediaProfile.MOBI
+import org.gotson.komga.domain.model.MediaProfile.PDF
 import org.gotson.komga.domain.model.NoThumbnailFoundException
 import org.gotson.komga.domain.model.R2Progression
 import org.gotson.komga.domain.model.ReadProgress
@@ -72,6 +76,8 @@ class BookLifecycle(
   private val komgaSettingsProvider: KomgaSettingsProvider,
   @Qualifier("pdfImageType")
   private val pdfImageType: ImageType,
+  @Qualifier("mobiImageType")
+  private val mobiImageType: ImageType,
 ) {
   private val resizeTargetFormat = ImageType.JPEG
 
@@ -317,10 +323,11 @@ class BookLifecycle(
     val media = mediaRepository.findById(book.id)
     val pageContent = bookAnalyzer.getPageContent(BookWithMedia(book, media), number)
     val pageMediaType =
-      if (media.profile == MediaProfile.PDF)
-        pdfImageType.mediaType
-      else
-        media.pages[number - 1].mediaType
+      when (media.profile) {
+        MediaProfile.PDF -> pdfImageType.mediaType
+        MediaProfile.MOBI -> mobiImageType.mediaType
+        else -> media.pages[number - 1].mediaType
+      }
 
     if (resizeTo != null) {
       val convertedPage =
@@ -412,7 +419,7 @@ class BookLifecycle(
     require(page in 1..media.pageCount) { "Page argument ($page) must be within 1 and book page count (${media.pageCount})" }
 
     val locator =
-      if (media.profile == MediaProfile.EPUB) {
+      if (media.profile == EPUB) {
         require(media.epubDivinaCompatible) { "epub book is not Divina compatible" }
 
         val extension =
@@ -468,9 +475,10 @@ class BookLifecycle(
     requireNotNull(media.profile) { "Media has no profile" }
     val progress =
       when (media.profile!!) {
-        MediaProfile.DIVINA,
-        MediaProfile.PDF,
-        -> {
+        DIVINA,
+        MOBI,
+        PDF,
+          -> {
           require(newProgression.locator.locations?.position in 1..media.pageCount) { "Page argument (${newProgression.locator.locations?.position}) must be within 1 and book page count (${media.pageCount})" }
           ReadProgress(
             book.id,
@@ -484,7 +492,7 @@ class BookLifecycle(
           )
         }
 
-        MediaProfile.EPUB -> {
+        EPUB -> {
           val href =
             newProgression.locator.href
               .replaceAfter("#", "")

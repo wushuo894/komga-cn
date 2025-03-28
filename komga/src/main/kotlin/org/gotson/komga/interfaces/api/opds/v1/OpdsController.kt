@@ -749,6 +749,7 @@ class OpdsController(
         MediaProfile.DIVINA -> media.pages.map { it.mediaType }.distinct()
         MediaProfile.PDF -> listOf(pdfImageType.mediaType)
         MediaProfile.EPUB -> if (media.epubDivinaCompatible) media.pages.map { it.mediaType }.distinct() else emptyList()
+        MediaProfile.MOBI -> listOf(pdfImageType.mediaType)
         null -> emptyList()
       }
 
