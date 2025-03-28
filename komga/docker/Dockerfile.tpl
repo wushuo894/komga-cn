@@ -1,4 +1,4 @@
-FROM eclipse-temurin:17-jre
+FROM ibm-semeru-runtimes:open-17-jre
 COPY build/libs/komga-*.jar /usr/app/komga.jar
 WORKDIR /usr/app
 VOLUME /config
