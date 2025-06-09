@@ -64,5 +64,5 @@ jobs:
         env:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKERHUB_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-          DOCKERHUB_REPOSITORY: wushuo894/komga-cn:${{ env.version }}
+          DOCKERHUB_REPOSITORY: wushuo894/komga-cn:latest, wushuo894/komga-cn:${{ env.version }}
           README_FILEPATH: ./README.md
