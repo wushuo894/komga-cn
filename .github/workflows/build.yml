@@ -56,7 +56,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: ./komga
-          file: ./komga/docker/Dockerfile.tpl
+          file: ./komga/docker/Dockerfile
           push: true
           tags: wushuo894/komga-cn:latest
       - name: DockerHub Description
